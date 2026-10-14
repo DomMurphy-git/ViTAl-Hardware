@@ -51,3 +51,23 @@ Edge-ViT-Acc/
 ├── test_vectors/             # Binary `.bin` inputs, packed weights, and expected outputs
 ├── prompts_and_logs/         # AI agent collaboration session logs & verification records
 └── README.md
+```
+
+### Streaming Base-2 Softmax Model
+
+[`base2_softmax.py`](./base2_softmax.py) is a NumPy reference model for the
+online running-maximum/running-sum softmax recurrence. It uses fixed-point
+scores, a 64-entry fractional base-2 exponential LUT, Q15 weights, and integer
+shifts. Its `streaming_attention` function processes key/value blocks without
+materializing the full query-by-key score matrix.
+
+Run its deterministic checks with:
+
+```sh
+python3 base2_softmax.py --self-test
+```
+
+NumPy is required; if PyTorch is installed, the self-test also compares the
+approximate probabilities and attention output with PyTorch Softmax. Since the
+LUT and fixed-point conversions are approximations, parity is numerical within
+the self-test tolerances rather than bit-identical to floating-point PyTorch.
