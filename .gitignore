@@ -1,0 +1,13 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Vivado-generated project and temporary files
+build/
+.Xil/
+*.jou
+*.str
+
+# Local editor / operating-system files
+.vscode/
+.DS_Store

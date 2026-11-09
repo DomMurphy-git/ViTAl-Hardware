@@ -40,34 +40,50 @@ Vision Transformers capture global spatial contexts far better than traditional 
 
 ---
 
-## 🛠️ Repository Structure
+## Repository Structure
 
 ```text
-Edge-ViT-Acc/
-├── docs/                     # Project proposal, operational specs, & literature notes
-├── rtl/                      # SystemVerilog source files (Datapath, Unpacker, MAC, Softmax)
-├── sim/                      # Testbenches & Vivado simulation scripts
-├── software/                 # PyTorch golden models, quantization scripts, & ARM host drivers
-├── test_vectors/             # Binary `.bin` inputs, packed weights, and expected outputs
-├── prompts_and_logs/         # AI agent collaboration session logs & verification records
-└── README.md
+.
+├── board/                    # PYNQ-Z2 runner, tests, and setup instructions
+├── docs/                     # Proposal, sprint plan, and presentation assets
+│   └── presentations/
+├── rtl/                      # FPGA SystemVerilog
+├── sim/                      # RTL testbench, host verification, and reports
+│   └── results/
+├── software/                 # NumPy/PyTorch reference models
+└── vivado/                   # Vivado project build scripts
 ```
+
+Project documents: [Sprint 1 plan](./docs/sprint1.md), [proposal PDF](./docs/Murphy_Edge_ViT_Proposal.pdf), and [presentation assets](./docs/presentations/).
 
 ### Streaming Base-2 Softmax Model
 
-[`base2_softmax.py`](./base2_softmax.py) is a NumPy reference model for the
-online running-maximum/running-sum softmax recurrence. It uses fixed-point
-scores, a 64-entry fractional base-2 exponential LUT, Q15 weights, and integer
-shifts. Its `streaming_attention` function processes key/value blocks without
-materializing the full query-by-key score matrix.
+[`software/base2_softmax.py`](./software/base2_softmax.py) is a NumPy
+reference model for the online running-maximum/running-sum softmax recurrence.
+It uses fixed-point scores, a 64-entry fractional base-2 exponential LUT, Q15
+weights, and integer shifts. Its `streaming_attention` function processes
+key/value blocks without materializing the full query-by-key score matrix.
 
 Run its deterministic checks with:
 
 ```sh
-python3 base2_softmax.py --self-test
+python3 software/base2_softmax.py --self-test
 ```
 
 NumPy is required; if PyTorch is installed, the self-test also compares the
 approximate probabilities and attention output with PyTorch Softmax. Since the
 LUT and fixed-point conversions are approximations, parity is numerical within
 the self-test tolerances rather than bit-identical to floating-point PyTorch.
+
+### PYNQ-Z2 FPGA Demo
+
+The first FPGA-backed attention demo is under [`board/`](./board/README.md).
+It includes a fixed-shape AXI-stream attention engine, a Vivado build script,
+and a PYNQ DMA runner that compares FPGA output to the NumPy reference. It is
+an attention-kernel proof with synthetic Q/K/V vectors, not yet full image
+inference or a measured performance result. The Vivado bitstream must be built
+on a supported Linux workstation and validated on the physical board.
+
+Host-side verification scripts and generated presentation results are
+documented in [`sim/`](./sim/README.md). Their software mirror is not a
+substitute for RTL simulation or FPGA testing.

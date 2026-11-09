@@ -1,0 +1,88 @@
+{
+  "artifacts": {
+    "csv": "numeric_cases.csv",
+    "json": "verification_report.json",
+    "markdown": "verification_report.md",
+    "svg": "verification_summary.svg"
+  },
+  "configuration": {
+    "board_target": "TUL PYNQ-Z2 / XC7Z020",
+    "exponential_weight_format": "unsigned Q15",
+    "input_format": "signed int8 stored as sign-extended 32-bit stream words, Q4 scale",
+    "output_format": "signed int8, Q4 scale",
+    "query_width": 32,
+    "score_format": "signed Q12",
+    "token_count": 196,
+    "value_width": 16
+  },
+  "hdl_tool_status": {
+    "hdl_simulation_run": false,
+    "reason": "No HDL simulator is available in this environment.",
+    "tools": {
+      "iverilog": null,
+      "verilator": null,
+      "vivado": null,
+      "xelab": null,
+      "xsim": null,
+      "xvlog": null
+    }
+  },
+  "interface_and_memory": {
+    "axis_stream_signals_present": [
+      "s_axis_tvalid",
+      "s_axis_tready",
+      "s_axis_tdata",
+      "s_axis_tlast",
+      "m_axis_tvalid",
+      "m_axis_tready",
+      "m_axis_tdata",
+      "m_axis_tlast"
+    ],
+    "dma_memory_interconnect_has_read_and_write_ports": true,
+    "input_words_per_transaction": 9440,
+    "one_key_vector_retained": 32,
+    "one_value_vector_retained": 16,
+    "query_bytes_retained": 32,
+    "tlast_is_used_for_input_framing": false,
+    "token_score_matrix_declared": false,
+    "weighted_output_accumulators_retained": 16
+  },
+  "lut_and_exponential": {
+    "exp_input_deltas_checked": 65536,
+    "exp_monotonic": true,
+    "max_abs_exp_error": 0.010684696248608794,
+    "rtl_exp_matches_python_all_checked_deltas": true,
+    "rtl_lut_entries": 64,
+    "rtl_lut_matches_python": true
+  },
+  "numeric": {
+    "all_numeric_cases_within_board_tolerance": true,
+    "board_tolerance_dequantized_units": 0.2,
+    "deterministic_edge_cases": 4,
+    "fixed_width_ranges_fit": true,
+    "max_abs_accumulator": 89915392,
+    "max_abs_output_error_vs_python": 0.03123858033149235,
+    "max_abs_output_error_vs_torch": 0.03137490611921102,
+    "max_abs_score_q12": 1471372,
+    "max_denominator_q15": 6422528,
+    "numeric_cases": 132,
+    "pytorch_available": true,
+    "random_seeds": 128,
+    "worst_python_comparison_case": "random_seed_0023",
+    "worst_torch_comparison_case": "random_seed_0072"
+  },
+  "overall_result": "PASS",
+  "protocol": {
+    "expected_input_words": 188800,
+    "expected_output_words": 320,
+    "input_and_output_stall_cycles": 128,
+    "input_words_transferred": 188800,
+    "maximum_cycles_for_one_trial": 11835,
+    "output_words_transferred": 320,
+    "protocol_schedule_model": "cycle-level ready/valid with randomized source gaps and output back-pressure",
+    "protocol_trials": 20,
+    "scope_note": "schedule model only; not an RTL simulator"
+  },
+  "run_time_utc": "2026-11-09T01:01:07.955228+00:00",
+  "scope": "host software verification of RTL-mirrored arithmetic and protocol schedule; not HDL simulation or board validation"
+}

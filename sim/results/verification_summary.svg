@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Local streaming-attention software verification</title>
+  <desc id="desc">Passed host software tests: 132 quantized cases, 64 matching LUT entries, and 65,536 exponential deltas checked. No HDL simulator or board run was available.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a1422"/><stop offset="1" stop-color="#101e30"/></linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#35d4a0"/><stop offset="1" stop-color="#20b67b"/></linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse"><path d="M36 0H0V36" fill="none" stroke="#9bb2cd" stroke-opacity=".045"/></pattern>
+    <style>text{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}.w{fill:#f2f7fc}.m{fill:#91a4bc}.mono{font-family:"SFMono-Regular",Consolas,monospace}</style>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/><rect width="1600" height="900" fill="url(#grid)"/>
+  <text x="84" y="76" fill="#72aaff" font-size="17" font-weight="700" letter-spacing="3">VITAL HARDWARE / LOCAL TEST REPORT</text>
+  <text x="84" y="139" class="w" font-size="40" font-weight="750">STREAMING ATTENTION · SOFTWARE CHECKS</text>
+  <rect x="1240" y="55" width="276" height="94" rx="20" fill="#12352f" stroke="#2ad49b"/>
+  <circle cx="1282" cy="102" r="18" fill="url(#green)"/><path d="m1273 102 6 6 12-14" fill="none" stroke="#08251f" stroke-width="4" stroke-linecap="round"/>
+  <text x="1315" y="98" fill="#67e4b7" font-size="14" font-weight="700" letter-spacing="2">HOST MODEL</text><text x="1315" y="126" class="w" font-size="22" font-weight="800">CHECKS PASS</text>
+  <text x="84" y="206" class="m" font-size="19">Q12 scores · Q15 exponential · Q4 int8 inputs/outputs · 196 keys per test</text>
+  <g>
+    <rect x="84" y="244" width="1432" height="227" rx="24" fill="#142338" stroke="#263b55"/>
+    <text x="122" y="289" fill="#72aaff" font-size="14" font-weight="750" letter-spacing="2">FIXED-POINT RESULT COMPARISON</text>
+    <text x="122" y="335" class="w" font-size="18">RTL-arithmetic software mirror vs Python reference</text>
+    <rect x="122" y="355" width="660" height="17" rx="8" fill="#263b55"/><rect x="122" y="355" width="103.09" height="17" rx="8" fill="url(#green)"/>
+    <text x="810" y="373" class="w mono" font-size="20">0.03124</text>
+    <text x="122" y="411" class="m" font-size="15">Maximum absolute output difference · dequantized value units</text>
+    <text x="122" y="446" fill="#57d9aa" font-size="15" font-weight="700">ALL 132 CASES WITHIN 0.20 TOLERANCE</text>
+    <text x="870" y="335" class="w" font-size="18">MAX ABS ERROR VS PYTORCH</text>
+    <rect x="870" y="355" width="570" height="17" rx="8" fill="#263b55"/><rect x="870" y="355" width="89.42" height="17" rx="8" fill="#6c8cff"/>
+    <text x="1460" y="373" class="w mono" font-size="20" text-anchor="end">0.03137</text>
+    <text x="870" y="411" class="m" font-size="15">Separate numeric comparison; not bit-identical floating-point behavior</text>
+    <text x="870" y="446" fill="#93aaff" font-size="15" font-weight="700">WORST OF 132 SEEDED/EDGE CASES</text>
+  </g>
+  <g>
+    <rect x="84" y="499" width="446" height="194" rx="22" fill="#142338" stroke="#263b55"/>
+    <rect x="554" y="499" width="446" height="194" rx="22" fill="#142338" stroke="#263b55"/>
+    <rect x="1024" y="499" width="492" height="194" rx="22" fill="#142338" stroke="#263b55"/>
+    <text x="118" y="540" class="m" font-size="14" font-weight="700" letter-spacing="1.5">LUT + EXPONENT CHECK</text>
+    <text x="118" y="589" class="w" font-size="34" font-weight="750">64 / 64</text>
+    <text x="118" y="623" fill="#57d9aa" font-size="15" font-weight="700">RTL LUT MATCHES PYTHON</text>
+    <text x="118" y="662" class="m" font-size="14">65,536 deltas match; max exp abs error 0.01068</text>
+    <text x="588" y="540" class="m" font-size="14" font-weight="700" letter-spacing="1.5">EDGE + RANDOM TEST VECTORS</text>
+    <text x="588" y="589" class="w" font-size="34" font-weight="750">4 + 128</text>
+    <text x="588" y="623" fill="#57d9aa" font-size="15" font-weight="700">ALL 132 NUMERIC TESTS PASS</text>
+    <text x="588" y="662" class="m" font-size="14">Zero · equal scores · dominant score · extreme bytes · seeded random</text>
+    <text x="1058" y="540" class="m" font-size="14" font-weight="700" letter-spacing="1.5">STORAGE + STREAM MODEL</text>
+    <text x="1058" y="589" class="w" font-size="29" font-weight="750">NO N × N SCORE ARRAY</text>
+    <text x="1058" y="623" fill="#57d9aa" font-size="15" font-weight="700">188,800 INPUT / 320 OUTPUT WORDS</text>
+    <text x="1058" y="662" class="m" font-size="14">20 ready/valid schedule trials with randomized stalls</text>
+  </g>
+  <rect x="84" y="729" width="1432" height="100" rx="18" fill="#321f27" stroke="#b65d62"/>
+  <text x="116" y="768" fill="#ffb5ad" font-size="16" font-weight="800" letter-spacing="1">IMPORTANT: SOFTWARE VERIFICATION ONLY</text>
+  <text x="116" y="802" class="w" font-size="15">No SystemVerilog compiler/simulator, Vivado bitstream build, or PYNQ-Z2 board test was available. FPGA behavior is NOT yet verified.</text>
+  <text x="84" y="871" class="m" font-size="14">Run: python3 sim/verify_demo.py · Details + per-case values: verification_report.md / numeric_cases.csv</text>
+  <text x="1516" y="871" class="m" font-size="14" text-anchor="end">No timing, power, or image-accuracy claim</text>
+</svg>
