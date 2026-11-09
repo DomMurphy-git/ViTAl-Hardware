@@ -5,10 +5,10 @@
 **PowerPoint length:** 5:00 at a clear presentation pace
 **Status snapshot:** 8 November 2026
 
-> Accuracy note: the numbers below come from host-side Python tests. The
-> SystemVerilog has not yet been compiled or run in an HDL simulator, a
-> Vivado bitstream has not been built, and the board has not yet run the demo.
-> The PYNQ-Z2 is now secured; physical bring-up is the next proof point.
+> Accuracy note: board bring-up and initial hardware checks are complete.
+> Repository code has not been run on the board: the SystemVerilog has not
+> been compiled or run in an HDL simulator, no Vivado bitstream has been
+> built, and the repository's DMA demo has not been tested.
 
 For the interactive version, navigate with the arrow keys or bottom buttons.
 Click pipeline stages and milestones to expand explanations; use **Speaker
@@ -20,10 +20,11 @@ talk tracks for those slides follow the timing table.
 ## Slide 1 — Sprint 2: from model to board demo (0:30)
 
 “This Sprint 2 update is about moving from an algorithm we can test in Python
-toward a small attention kernel for the PYNQ-Z2. The board is now secured.
-Today’s passing results are still host-side: the SystemVerilog has not been
-simulated and no bitstream has run on the board. I’ll cover what is
-implemented, what the numbers show, and the next validation steps.”
+toward a small attention kernel for the PYNQ-Z2. Board bring-up and the
+initial hardware checks are complete. The repository code has not yet been
+tested on the board: there is no RTL simulation, Vivado build, or DMA demo
+result. I’ll cover what is implemented, what the software numbers show, and
+the next validation steps.”
 
 ## Slide 2 — One attention head, streamed end to end (0:50)
 
@@ -39,15 +40,13 @@ projections and image classification are not included.”
 
 ## Slide 3 — The demo path is represented in code (0:55)
 
-“The repository now has four pieces for that path. First is an AXI-stream
-SystemVerilog module for the fixed-size operation; second, a Vivado Tcl recipe
-for the Zynq processing system and AXI DMA; third, a PYNQ runner that sends
-deterministic inputs and compares output with the Python reference; and
-fourth, a host verification harness and RTL testbench.
-
-They are implementation artifacts, not proof the hardware works. The board
-still needs to boot, the RTL needs to compile and simulate, and the overlay
-and DMA runner need an end-to-end board test.”
+“The repository has four pieces for the demo path: an AXI-stream
+SystemVerilog module, a Vivado Tcl recipe for the Zynq processing system and
+AXI DMA, a PYNQ runner that sends deterministic inputs and compares output
+with Python, and a host verification harness plus RTL testbench. Board
+bring-up is now complete. These code artifacts remain untested: next we must
+compile and simulate the RTL, build the overlay, and run the repository's DMA
+test on the board.”
 
 ## Slide 4 — What the local numerical tests say (1:00)
 
@@ -71,21 +70,22 @@ Source inspection finds no N-by-N score buffer; the modeled state is the
 query, current key/value, recurrence state, and output accumulators.
 
 These checks use Python or source inspection, not SystemVerilog execution.
-There is no Vivado timing/resource report, power measurement, or board DMA
-result. The software mirror passes; FPGA behavior remains unverified.”
+Board bring-up and initial checks are complete, but there is no RTL
+simulation, Vivado timing or resource report, power measurement, or
+repository-code DMA result. The software mirror passes; the FPGA attention
+kernel remains unverified.”
 
 ## Slide 6 — The next proof points (0:55)
 
-“Now that the board is secured, the next steps are concrete. First, bring up
-the PYNQ image and verify serial and network access. Then run the HDL
-testbench in Vivado simulation, fix any issues, and build the overlay. Finally,
-run the same seeded test through DMA and compare actual board output with
-Python.
+“Now that board bring-up and initial checks are complete, the next steps are
+to validate the repository code. First, compile and run the HDL testbench in
+Vivado simulation. Then build the overlay and run the same seeded test
+through the repository's DMA runner. Compare actual board output with Python.
 
-The proof we need is a build log, passing simulation, and board comparison.
-Only then can we claim the kernel works in programmable logic. Next we can
-add projection MACs, real model inputs, and measure latency and power. This
-is a step toward the accelerator, not the finished system.”
+The proof we need is a passing simulation, a reproducible build, and a board
+comparison. Only then can we claim the kernel works in programmable logic.
+Next we can add projection MACs, real model inputs, and measure latency and
+power. This is a step toward the accelerator, not the finished system.”
 
 ## Timing check
 
@@ -101,12 +101,12 @@ is a step toward the accelerator, not the finished system.”
 
 ## Interactive slide: System diagram
 
-“This is the proposed PYNQ-Z2 data path, not a photograph of a working board.
-Python on the ARM processor prepares signed Q4 query, key, and value words in
-DDR and configures the AXI DMA. The DMA streams those words into the
-programmable-logic attention core. The core returns 16 output values through
-the receive side of DMA; Python reads them back and compares against its NumPy
-reference.”
+“Board bring-up and initial hardware checks are complete. This diagram shows
+the repository's planned data path, which has not yet been tested: Python on
+the ARM processor prepares signed Q4 query, key, and value words in DDR and
+configures AXI DMA. DMA streams the words into the programmable-logic
+attention core. The core should return 16 values through the receive side of
+DMA; Python then compares them with its NumPy reference.”
 
 ## Interactive slide: Streaming progress trace
 

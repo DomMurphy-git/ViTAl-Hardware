@@ -17,16 +17,16 @@ ROOT = Path(__file__).resolve().parents[2]
 REPORT_PATH = ROOT / "sim" / "results" / "verification_report.json"
 OUTPUT = Path(__file__).with_name("Sprint2_Progress.pptx")
 
-NAVY = RGBColor(10, 20, 34)
-PANEL = RGBColor(20, 35, 56)
-PANEL_LIGHT = RGBColor(28, 48, 72)
-WHITE = RGBColor(242, 247, 252)
-MUTED = RGBColor(145, 164, 188)
-BLUE = RGBColor(105, 161, 255)
-GREEN = RGBColor(48, 211, 158)
-AMBER = RGBColor(255, 190, 96)
-RED = RGBColor(255, 132, 127)
-GRID = RGBColor(45, 65, 89)
+NAVY = RGBColor(6, 24, 45)
+PANEL = RGBColor(13, 43, 73)
+PANEL_LIGHT = RGBColor(18, 58, 94)
+WHITE = RGBColor(243, 248, 255)
+MUTED = RGBColor(164, 186, 208)
+BLUE = RGBColor(104, 183, 255)
+GREEN = RGBColor(98, 221, 164)
+AMBER = RGBColor(232, 173, 102)
+RED = RGBColor(241, 138, 126)
+GRID = RGBColor(49, 84, 119)
 FONT = "Aptos"
 MONO = "Aptos Mono"
 
@@ -151,11 +151,13 @@ def make_deck(report):
     add_text(slide, "SPRINT 2", 0.72, 1.28, 4.8, 0.72, size=48, bold=True)
     add_text(slide, "From a tested model\ntoward a board demo", 0.72, 2.05, 7.5, 1.25, size=31, bold=True)
     add_text(slide, "Streaming Base-2 attention on the PYNQ-Z2", 0.75, 3.52, 7.8, 0.42, size=18, color=MUTED)
-    add_box(slide, 9.2, 1.35, 3.35, 2.55, RGBColor(18, 53, 47), line_color=GREEN)
+    add_box(slide, 9.2, 1.35, 3.35, 3.35, RGBColor(18, 53, 47), line_color=GREEN)
     add_text(slide, "SOFTWARE MODEL", 9.48, 1.78, 2.8, 0.3, size=11, color=GREEN, bold=True)
     add_text(slide, "CHECKS PASS", 9.48, 2.22, 2.8, 0.52, size=24, bold=True)
-    add_text(slide, "FPGA / BOARD", 9.48, 2.96, 2.8, 0.3, size=11, color=AMBER, bold=True)
-    add_text(slide, "NOT YET TESTED", 9.48, 3.28, 2.9, 0.36, size=17, bold=True)
+    add_text(slide, "PYNQ-Z2 BRING-UP", 9.48, 2.96, 2.8, 0.3, size=11, color=GREEN, bold=True)
+    add_text(slide, "COMPLETE", 9.48, 3.28, 2.9, 0.36, size=17, bold=True)
+    add_text(slide, "REPOSITORY CODE", 9.48, 3.72, 2.8, 0.3, size=11, color=AMBER, bold=True)
+    add_text(slide, "NOT YET TESTED", 9.48, 4.04, 2.9, 0.36, size=17, bold=True)
     add_text(slide, "Progress snapshot · 8 November 2026", 0.75, 6.62, 7.0, 0.3, size=12, color=MUTED)
     add_text(slide, "5 MIN", 11.5, 6.62, 1.0, 0.3, size=12, color=BLUE, bold=True, align=PP_ALIGN.RIGHT)
 
@@ -191,7 +193,7 @@ def make_deck(report):
         prs,
         "Implementation",
         "The demo path is now represented in code",
-        "A build recipe and host driver exist; they still need to be compiled, simulated, and exercised on the secured board.",
+        "Board bring-up and initial checks are complete; the repository code still needs simulation, a build, and a board run.",
         3,
     )
     cards = [
@@ -206,8 +208,8 @@ def make_deck(report):
         add_text(slide, number, x + 0.22, 2.42, 0.55, 0.35, size=12, color=accent, bold=True)
         add_text(slide, title, x + 0.22, 2.92, 2.32, 0.44, size=18, bold=True)
         add_text(slide, description, x + 0.22, 3.52, 2.30, 0.98, size=13, color=MUTED, valign=MSO_ANCHOR.TOP)
-    add_box(slide, 0.62, 5.28, 12.03, 0.72, RGBColor(49, 39, 27), line_color=AMBER)
-    add_text(slide, "BOARD SECURED — first physical bring-up and FPGA validation are still ahead.", 0.9, 5.43, 11.4, 0.38, size=16, color=AMBER, bold=True)
+    add_box(slide, 0.62, 5.28, 12.03, 0.72, RGBColor(13, 43, 73), line_color=AMBER)
+    add_text(slide, "BOARD BRING-UP COMPLETE — repository RTL, overlay, and DMA runner remain untested.", 0.9, 5.43, 11.4, 0.38, size=16, color=AMBER, bold=True)
 
     # 4. Numeric results.
     slide = add_base(
@@ -247,7 +249,7 @@ def make_deck(report):
     add_text(slide, "WHAT THIS DOES NOT PROVE", 6.94, 2.34, 5.25, 0.3, size=11, color=AMBER, bold=True)
     add_bullet(slide, "No HDL compiler or simulator ran here", 6.94, 2.92, 5.2, bullet_color=AMBER)
     add_bullet(slide, "No Vivado build, timing, resource, or power report", 6.94, 3.68, 5.2, bullet_color=AMBER)
-    add_bullet(slide, "No bitstream or DMA transfer has run on the board yet", 6.94, 4.44, 5.2, bullet_color=AMBER)
+    add_bullet(slide, "The repository's bitstream and DMA demo have not run on the board", 6.94, 4.44, 5.2, bullet_color=AMBER)
     add_text(slide, "Report explicitly marks HDL simulation as NOT RUN.", 0.95, 5.98, 11.2, 0.34, size=15, color=WHITE, bold=True)
 
     # 6. Sprint close / next proof points.
@@ -255,14 +257,14 @@ def make_deck(report):
         prs,
         "Next proof points",
         "Sprint 2 target: evidence from the actual board",
-        "The objective is to replace “code prepared” with a reproducible build, simulation log, and board result.",
+        "Hardware bring-up is complete; next comes a reproducible repository-code build, simulation, and board result.",
         6,
     )
     steps = [
-        ("1", "Bring up board", "PYNQ image · serial · SSH"),
-        ("2", "Run HDL testbench", "xvlog → xelab → xsim"),
-        ("3", "Build overlay", "Vivado bitstream + HWH"),
-        ("4", "Run DMA demo", "board output vs Python"),
+        ("1", "Simulate RTL", "compile · testbench · logs"),
+        ("2", "Build overlay", "bitstream · HWH · reports"),
+        ("3", "Run repo DMA code", "seeded Q/K/V vectors"),
+        ("4", "Compare output", "FPGA result vs Python"),
     ]
     for i, (n, title, detail) in enumerate(steps):
         x = 0.62 + i * 3.08
@@ -271,9 +273,9 @@ def make_deck(report):
         add_text(slide, title, x + 0.62, 2.28, 1.95, 0.38, size=15, bold=True)
         add_text(slide, detail, x + 0.2, 2.91, 2.38, 0.32, size=11, color=MUTED)
     add_box(slide, 0.62, 4.05, 12.03, 1.2, RGBColor(18, 53, 47), line_color=GREEN)
-    add_text(slide, "SPRINT 2 DEMO BAR", 0.92, 4.27, 2.0, 0.25, size=10, color=GREEN, bold=True)
-    add_text(slide, "Rebuild it. Simulate it. Run the same seeded vectors on the PYNQ-Z2.", 0.92, 4.62, 10.9, 0.38, size=18, bold=True)
-    add_text(slide, "Only after that: measure latency/resources, then integrate projections and real image/model inputs.", 0.92, 5.65, 11.3, 0.48, size=14, color=MUTED)
+    add_text(slide, "NEXT PROOF BAR", 0.92, 4.27, 2.0, 0.25, size=10, color=GREEN, bold=True)
+    add_text(slide, "Compile it. Simulate it. Build the overlay. Run the same seeded vectors on the board.", 0.92, 4.62, 10.9, 0.38, size=18, bold=True)
+    add_text(slide, "Then measure latency/resources and integrate projections and real image/model inputs.", 0.92, 5.65, 11.3, 0.48, size=14, color=MUTED)
 
     prs.save(OUTPUT)
     return OUTPUT
