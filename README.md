@@ -91,4 +91,7 @@ substitute for RTL simulation or FPGA testing.
 The [`Sprint 2 progress deck`](./docs/presentations/Sprint2_Progress.pptx)
 and [timed speaker script](./docs/presentations/Sprint2_Speaker_Script.md)
 summarize the current implementation, software-only validation evidence,
-and remaining hardware verification.
+and remaining hardware verification. The
+[interactive Sprint 2 presentation](./docs/presentations/Sprint2_Interactive.html)
+adds animated diagrams, clickable explanations, and slide-by-slide speaker
+notes; open it in a browser and use the arrow keys or on-screen controls.

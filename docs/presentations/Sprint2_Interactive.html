@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a1422">
+<title>Sprint 2 | ViTAl-Hardware</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0a1422; --panel: #142338; --panel2: #1c3048;
+  --ink: #f2f7fc; --muted: #91a4bc; --blue: #72aaff;
+  --green: #39d6a2; --amber: #ffbe60; --red: #ff847f;
+  --line: #2d4159; --shadow: 0 24px 80px #02081299;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink) }
+body { background-image: radial-gradient(ellipse at 86% 4%, #376eb326, transparent 34%), radial-gradient(ellipse at 7% 96%, #25c89111, transparent 32%) }
+button { font: inherit; color: inherit }
+.app { height: 100%; display: grid; grid-template-rows: 1fr auto; padding: 22px clamp(16px, 3vw, 48px) 14px; gap: 12px }
+.stage { position: relative; min-height: 0; border: 1px solid #263a52; border-radius: 26px; background: linear-gradient(145deg,#122035f5,#0e1a2af5); box-shadow: var(--shadow); overflow: hidden }
+.stage:before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.2; background-image:linear-gradient(#aec5df0a 1px,transparent 1px),linear-gradient(90deg,#aec5df0a 1px,transparent 1px); background-size:34px 34px }
+.slides { position:relative; width:100%; height:100% }
+.slide { position:absolute; inset:0; padding:clamp(22px,4vw,58px); display:flex; flex-direction:column; gap:clamp(14px,2vh,24px); opacity:0; transform:translateX(48px) scale(.99); pointer-events:none; transition:opacity .42s ease, transform .55s cubic-bezier(.2,.8,.2,1); overflow:auto }
+.slide.active { opacity:1; transform:none; pointer-events:auto; z-index:1 }
+.eyebrow { color:var(--blue); font-size:clamp(10px,1vw,14px); font-weight:800; letter-spacing:.18em; text-transform:uppercase }
+h1,h2,h3,p { margin:0 }
+h1 { font-size:clamp(42px,7vw,94px); line-height:.97; letter-spacing:-.055em; max-width:900px }
+h2 { font-size:clamp(27px,4vw,50px); line-height:1.04; letter-spacing:-.035em }
+h3 { font-size:clamp(15px,1.5vw,20px) }
+.subtitle { color:var(--muted); font-size:clamp(15px,1.7vw,22px); max-width:900px; line-height:1.45 }
+.label { color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase }
+.small { color:var(--muted); font-size:clamp(11px,1vw,14px); line-height:1.5 }
+.mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace }
+.pill { display:inline-flex; align-items:center; gap:8px; padding:9px 13px; border:1px solid var(--line); border-radius:99px; color:#d5e1ef; background:#142338ad; font-size:12px; font-weight:700 }
+.dot { width:8px; height:8px; display:inline-block; border-radius:50%; background:var(--green); box-shadow:0 0 12px currentColor }
+.status { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:min(580px,100%); margin-top:14px }
+.status > div { background:#142338cc; border:1px solid var(--line); border-radius:16px; padding:17px 20px }
+.status strong { display:block; font-size:clamp(16px,2vw,24px); margin-top:7px }
+.green { color:var(--green) }.amber { color:var(--amber) }.blue { color:var(--blue) }
+.hero { flex:1; display:flex; align-items:center; justify-content:space-between; gap:30px }
+.heroCopy { display:flex; flex-direction:column; gap:22px; max-width:850px }
+.orbit { position:relative; width:min(28vw,330px); aspect-ratio:1; flex:0 0 auto; border:1px solid #5b8fd344; border-radius:50%; display:grid; place-items:center; background:radial-gradient(circle,#1e426028,transparent 67%) }
+.orbit:before,.orbit:after { content:""; position:absolute; border:1px solid #5b8fd333; border-radius:50%; inset:15% }
+.orbit:after { inset:31% }
+.core { z-index:2; width:34%; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; background:#16382f; border:1px solid #39d6a266; color:var(--green); font-weight:900; box-shadow:0 0 42px #39d6a233 }
+.orbitNode { position:absolute; width:11px; height:11px; border-radius:50%; background:var(--blue); box-shadow:0 0 20px var(--blue); animation:orbit 9s linear infinite }
+.orbitNode:nth-child(2) { animation-delay:-3s; background:var(--green); color:var(--green) }
+.orbitNode:nth-child(3) { animation-delay:-6s }
+@keyframes orbit { from{transform:rotate(0) translateX(125px) rotate(0)} to{transform:rotate(360deg) translateX(125px) rotate(-360deg)} }
+.layout { display:grid; grid-template-columns:repeat(12,1fr); gap:clamp(10px,1.3vw,18px); align-items:stretch }
+.card { position:relative; background:linear-gradient(145deg,#192c43,#122035); border:1px solid var(--line); border-radius:18px; padding:clamp(14px,1.7vw,24px); min-width:0; overflow:hidden }
+.card:after { content:""; position:absolute; inset:auto -20% -72% -20%; height:100%; background:radial-gradient(ellipse,#4c8ee10d,transparent 65%); pointer-events:none }
+.span3 { grid-column:span 3 }.span4{grid-column:span 4}.span5{grid-column:span 5}.span6{grid-column:span 6}.span7{grid-column:span 7}.span8{grid-column:span 8}.span12{grid-column:span 12}
+.flow { display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(8px,1.2vw,16px); align-items:center; margin-top:auto; margin-bottom:auto }
+.flowNode { min-height:155px; cursor:pointer; transition:transform .2s,border-color .2s,box-shadow .2s }
+.flowNode:hover,.flowNode:focus-visible { transform:translateY(-5px); border-color:#6faaff99; box-shadow:0 14px 40px #02081277; outline:none }
+.flowNode .step { color:var(--blue); font-size:11px; font-weight:900; letter-spacing:.12em }
+.flowNode h3 { margin:16px 0 9px }
+.arrow { color:#7089a9; text-align:center; font-size:30px; animation:nudge 1.8s ease-in-out infinite }
+@keyframes nudge { 50%{transform:translateX(5px);color:var(--green)} }
+.streamViz { display:grid; grid-template-columns:1fr auto 1fr auto 1fr; align-items:center; gap:12px; margin:4px 0 12px }
+.tokenWell { min-height:62px; display:flex; flex-wrap:wrap; align-content:center; gap:5px; padding:12px; border:1px solid var(--line); background:#0b1725; border-radius:14px }
+.token { width:7px; height:7px; border-radius:50%; background:#4d76a6; opacity:.75; transition:background .3s,transform .3s,box-shadow .3s }
+.token.hot { background:var(--green); transform:scale(1.65); box-shadow:0 0 12px #39d6a2aa; opacity:1 }
+.stateBox { text-align:center; min-width:130px; padding:15px; border-radius:14px; background:#183328; border:1px solid #39d6a255; transition:transform .25s,box-shadow .25s }
+.stateBox.pulse { transform:scale(1.06); box-shadow:0 0 28px #39d6a244 }
+.equation { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center }
+.eq { padding:11px 15px; border:1px solid #39d6a255; border-radius:12px; background:#10251f; font-size:clamp(14px,1.6vw,21px); transition:transform .2s }
+.eq.flash { transform:translateY(-4px); color:var(--green) }
+.meter { height:12px; border-radius:99px; background:#263b55; overflow:hidden; margin:12px 0 8px }
+.meter > i { display:block; height:100%; width:0; border-radius:inherit; background:linear-gradient(90deg,#41d5a5,#75a9ff); transition:width 1.3s cubic-bezier(.2,.8,.2,1) }
+.metricValue { font-size:clamp(30px,4vw,54px); font-weight:850; letter-spacing:-.04em; font-variant-numeric:tabular-nums }
+.plot { width:100%; height:210px; display:block }
+.plot .gridline { stroke:#53698055; stroke-width:1 }
+.plot .line { fill:none; stroke:var(--blue); stroke-width:3; stroke-dasharray:1000; stroke-dashoffset:1000 }
+.slide.active .plot .line { animation:draw 1.8s ease forwards }
+@keyframes draw { to{stroke-dashoffset:0} }
+.workflow { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:auto 0 }
+.workStep { cursor:pointer; transition:transform .2s,border-color .2s }
+.workStep:hover,.workStep.selected { border-color:#39d6a288; transform:translateY(-4px) }
+.workStep .num { width:35px;height:35px;border-radius:50%;display:grid;place-items:center;background:#17382f;color:var(--green);font-weight:900;margin-bottom:16px }
+.detail { min-height:82px; border-left:3px solid var(--green); padding:12px 18px; color:#d5e1ef; background:#122035; border-radius:0 12px 12px 0 }
+.meterRow { display:grid; grid-template-columns:120px 1fr 80px; gap:12px; align-items:center; margin:13px 0; font-size:13px }
+.meterRow .meter { margin:0 }
+.check { display:flex; gap:12px; align-items:flex-start; margin:13px 0; font-size:14px; line-height:1.45 }
+.check b { color:var(--green) }
+.check.pending b { color:var(--amber) }
+.controls { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; min-height:54px }
+.controlGroup { display:flex; align-items:center; gap:8px }
+.btn { border:1px solid var(--line); background:#142338; border-radius:11px; padding:10px 14px; cursor:pointer; transition:background .2s,border-color .2s,transform .15s }
+.btn:hover,.btn:focus-visible { background:#203650; border-color:#6faaff99; outline:none }
+.btn:active { transform:scale(.97) }
+.progress { height:5px; background:#23364b; border-radius:99px; overflow:hidden }
+.progress > i { display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .35s ease }
+.toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px }
+.notes { position:fixed; z-index:8; right:22px; bottom:84px; width:min(520px,calc(100vw - 32px)); max-height:55vh; overflow:auto; display:none; padding:20px; border:1px solid #45617e; border-radius:18px; background:#101e30f5; box-shadow:var(--shadow); line-height:1.55 }
+.notes.show { display:block; animation:appear .2s ease-out }
+@keyframes appear { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none} }
+.modal { position:fixed; inset:0; z-index:9; display:none; place-items:center; padding:20px; background:#020812bb; backdrop-filter:blur(8px) }
+.modal.show { display:grid }
+.modalInner { width:min(600px,100%); padding:28px; border:1px solid #45617e; border-radius:22px; background:#142338; box-shadow:var(--shadow) }
+.modalClose { float:right }
+.toast { position:fixed; z-index:10; bottom:84px; left:50%; transform:translate(-50%,10px); opacity:0; pointer-events:none; background:#142338; border:1px solid var(--line); padding:10px 15px; border-radius:99px; color:var(--muted); transition:.2s }
+.toast.show { transform:translate(-50%,0);opacity:1 }
+.caseGrid { display:grid;grid-template-columns:repeat(16,1fr);gap:5px }
+.caseCell { aspect-ratio:1;border-radius:3px;background:#39d6a2; opacity:.82; animation:caseIn .35s both }
+@keyframes caseIn { from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:.82} }
+.fine { font-size:11px; line-height:1.45; color:var(--muted) }
+.pause * { animation-play-state:paused !important }
+@media(max-width:850px) {
+ .app{padding:10px;gap:8px}.stage{border-radius:18px}
+ .slide{padding:20px;gap:12px}.orbit{display:none}
+ .flow{grid-template-columns:1fr 1fr}.arrow{display:none}
+ .span3,.span4,.span5,.span6,.span7,.span8{grid-column:span 6}
+ .workflow{grid-template-columns:1fr 1fr}
+ .controls{gap:7px}.btn{padding:8px 10px}.toolbar .label{display:none}
+}
+@media(max-width:540px) {
+ .status{grid-template-columns:1fr 1fr}
+ .flow{grid-template-columns:1fr 1fr}.flowNode{min-height:120px}
+ .layout{gap:8px}.span3,.span4,.span5,.span6,.span7,.span8{grid-column:span 12}
+ .slide{overflow:auto}.controls{grid-template-columns:auto 1fr}
+ .toolbar{grid-column:1/-1;justify-content:center}
+ .caseGrid{grid-template-columns:repeat(12,1fr)}
+}
+@media(prefers-reduced-motion:reduce) {
+ *,*:before,*:after{animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+  <section class="stage" aria-label="Sprint 2 interactive presentation">
+    <div class="slides">
+      <article class="slide active" data-title="Sprint 2">
+        <div class="eyebrow">ViTAl-Hardware · EC601 · Progress snapshot · 8 November 2026</div>
+        <div class="hero">
+          <div class="heroCopy">
+            <h1>From tested model<br>toward a board demo</h1>
+            <p class="subtitle">Streaming Base-2 attention on the PYNQ-Z2</p>
+            <div class="status">
+              <div><span class="label"><i class="dot"></i> Software mirror</span><strong class="green">Checks pass</strong></div>
+              <div><span class="label">FPGA / board</span><strong class="amber">Not yet tested</strong></div>
+            </div>
+            <span class="pill">5-minute Sprint 2 update <span class="blue">·</span> use ← → to navigate</span>
+          </div>
+          <div class="orbit" aria-hidden="true"><i class="orbitNode"></i><i class="orbitNode"></i><i class="orbitNode"></i><div class="core">STREAM</div></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Attention flow">
+        <div class="eyebrow">01 / Demo scope</div>
+        <h2>One attention head, streamed end to end</h2>
+        <p class="subtitle">Select a stage for the plain-language explanation. The dots animate key rows into the running state.</p>
+        <div class="flow">
+          <button class="card flowNode" data-detail="One 32-number query is compared with 196 key vectors. Each key has 32 signed-byte values; its matching value vector has 16." aria-label="Explain input stage">
+            <div class="step">01 · INPUT</div><h3>Query + key/value rows</h3><p class="small">32 query values<br>196 token rows</p>
+          </button><div class="arrow" aria-hidden="true">→</div>
+          <button class="card flowNode" data-detail="Each query/key dot product is scaled by 1 over the square root of 32 and rounded to the model's signed Q12 score format." aria-label="Explain score stage">
+            <div class="step">02 · SCORE</div><h3>Dot product</h3><p class="small">q · k<br>scale + Q12 quantize</p>
+          </button><div class="arrow" aria-hidden="true">→</div>
+          <button class="card flowNode" data-detail="The running maximum stabilizes the weights. A 64-entry fractional LUT and shifts approximate the exponential; Q15 weights update the running denominator and weighted-value accumulator." aria-label="Explain online Softmax stage">
+            <div class="step green">03 · ONLINE SOFTMAX</div><h3>Update state</h3><p class="small">running max + sum<br>64-entry LUT · Q15</p>
+          </button><div class="arrow" aria-hidden="true">→</div>
+          <button class="card flowNode" data-detail="After all 196 rows have been consumed, divide the weighted-value accumulator by the weight denominator. The demo emits 16 signed Q4 outputs." aria-label="Explain output stage">
+            <div class="step">04 · OUTPUT</div><h3>Normalize</h3><p class="small">a / l<br>16 signed Q4 values</p>
+          </button>
+        </div>
+        <div class="streamViz">
+          <div><div class="label">196 streamed tokens</div><div class="tokenWell" id="tokens" aria-label="Animated key-token stream"></div></div>
+          <span class="arrow">→</span>
+          <div class="stateBox" id="stateBox"><div class="label">Running state</div><strong class="mono">m, l, a</strong><div class="small">max · denominator · values</div></div>
+          <span class="arrow">→</span>
+          <div class="stateBox" style="border-color:#41628a;background:#13243a"><div class="label">Output vector</div><strong class="mono blue">16 values</strong><div class="small">not a score matrix</div></div>
+        </div>
+        <div class="detail" id="flowDetail" aria-live="polite">Click one of the four pipeline blocks to inspect what that stage does.</div>
+      </article>
+
+      <article class="slide" data-title="Implementation progress">
+        <div class="eyebrow">02 / Implementation</div>
+        <h2>The demo path is represented in code</h2>
+        <p class="subtitle">Click each milestone to see the deliverable and its current evidence state.</p>
+        <div class="workflow">
+          <button class="card workStep selected" data-work="rtl"><div class="num">01</div><h3>RTL kernel</h3><p class="small">AXI stream · Q12/Q15<br>running max + sum</p></button>
+          <button class="card workStep" data-work="build"><div class="num">02</div><h3>Vivado recipe</h3><p class="small">Zynq PS + AXI DMA<br>overlay build Tcl</p></button>
+          <button class="card workStep" data-work="driver"><div class="num">03</div><h3>PYNQ runner</h3><p class="small">seeded vectors<br>DMA + reference compare</p></button>
+          <button class="card workStep" data-work="tests"><div class="num">04</div><h3>Host verification</h3><p class="small">integer mirror<br>edge + random cases</p></button>
+        </div>
+        <div class="detail" id="workDetail" aria-live="polite">RTL source exists. It has not yet been compiled or run in an HDL simulator.</div>
+        <div class="layout"><div class="card span6"><div class="label">Milestone tracker</div><div class="meterRow"><span>Software model</span><div class="meter"><i data-meter="100"></i></div><b class="green">TESTED</b></div><div class="meterRow"><span>RTL source</span><div class="meter"><i data-meter="65"></i></div><b class="amber">WRITTEN</b></div><div class="meterRow"><span>Board demo</span><div class="meter"><i data-meter="15"></i></div><b class="amber">PENDING</b></div></div><div class="card span6"><div class="label">What changed this sprint</div><h3 style="margin-top:12px">The board is secured.</h3><p class="small" style="margin-top:10px">Next evidence: boot and connect the PYNQ-Z2, simulate the RTL, build the bitstream, then run the same vectors through DMA.</p></div></div>
+      </article>
+
+      <article class="slide" data-title="Numerical evidence">
+        <div class="eyebrow">03 / Numerical evidence</div>
+        <h2>132 synthetic cases stayed within the demo threshold</h2>
+        <p class="subtitle">Four deterministic edge cases plus 128 seeded random vectors. Click “replay” to animate the result comparison.</p>
+        <div class="layout">
+          <div class="card span6"><div class="label">RTL arithmetic mirror vs Python reference</div><div class="metricValue" id="pythonMetric">0.00000</div><div class="small">worst maximum absolute difference · value units</div><div class="meter"><i id="pythonBar"></i></div><div class="small">threshold <strong class="green" id="toleranceText">0.20</strong> · smaller is better</div></div>
+          <div class="card span6"><div class="label">RTL arithmetic mirror vs PyTorch</div><div class="metricValue blue" id="torchMetric">0.00000</div><div class="small">same Q4 inputs · numerical comparison, not bit-identical behavior</div><div class="meter"><i id="torchBar"></i></div><div class="small">worst case across the test set</div></div>
+          <div class="card span5"><div class="label">Coverage · click replay</div><div class="metricValue" id="caseCount">132</div><div class="caseGrid" id="caseGrid" aria-label="One animated square per numerical test case"></div><p class="small" style="margin-top:8px">4 edge + 128 seeded random cases</p></div>
+          <div class="card span7"><div class="label">Output error relative to threshold</div><svg class="plot" viewBox="0 0 700 210" role="img" aria-label="Comparison of maximum output error and tolerance"><line class="gridline" x1="70" y1="30" x2="670" y2="30"/><line class="gridline" x1="70" y1="85" x2="670" y2="85"/><line class="gridline" x1="70" y1="140" x2="670" y2="140"/><line class="gridline" x1="70" y1="175" x2="670" y2="175"/><text x="12" y="34" fill="#91a4bc" font-size="12">0.20</text><text x="12" y="89" fill="#91a4bc" font-size="12">0.15</text><text x="12" y="144" fill="#91a4bc" font-size="12">0.10</text><text x="12" y="179" fill="#91a4bc" font-size="12">0.00</text><line x1="70" y1="30" x2="670" y2="30" stroke="#ffbe60" stroke-dasharray="6 6"/><path class="line" d="M75 175 L180 173 L285 170 L390 168 L495 165 L600 162 L660 160"/><circle cx="660" cy="160" r="7" fill="#39d6a2"/><text x="75" y="202" fill="#91a4bc" font-size="12">seeded cases →</text><text x="520" y="52" fill="#ffbe60" font-size="12">0.20 tolerance</text></svg><button class="btn" id="replay" type="button">↻ Replay visual</button></div>
+        </div>
+        <p class="fine">Synthetic inputs only. The tolerance is a demo acceptance setting, not a measured image-accuracy requirement.</p>
+      </article>
+
+      <article class="slide" data-title="Streaming evidence">
+        <div class="eyebrow">04 / Streaming evidence</div>
+        <h2>The software checks support the streaming design claim</h2>
+        <p class="subtitle">The design stores working state as it consumes keys. The checks below model expected behavior; they do not execute the SystemVerilog.</p>
+        <div class="layout">
+          <div class="card span7"><div class="label">Expected attention working set</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:18px">
+              <div class="card" style="padding:13px"><span class="label">Query</span><h3 style="margin-top:8px">32</h3><p class="fine">int8 values</p></div>
+              <div class="card" style="padding:13px"><span class="label">Key</span><h3 style="margin-top:8px">32</h3><p class="fine">current row</p></div>
+              <div class="card" style="padding:13px"><span class="label">Value</span><h3 style="margin-top:8px">16</h3><p class="fine">current row</p></div>
+              <div class="card" style="padding:13px"><span class="label">Accumulator</span><h3 style="margin-top:8px">16</h3><p class="fine">output lanes</p></div>
+            </div>
+            <svg viewBox="0 0 700 125" class="plot" style="height:130px" aria-label="Small linear working state compared with a large square score matrix"><rect x="14" y="26" width="270" height="62" rx="12" fill="#17382f" stroke="#39d6a2"/><text x="34" y="52" fill="#f2f7fc" font-size="16">Q + current K/V + running state</text><text x="34" y="73" fill="#39d6a2" font-size="12">bounded working state per query</text><path d="M305 57h55" stroke="#91a4bc" stroke-width="2"/><path d="m351 50 9 7-9 7" fill="none" stroke="#91a4bc" stroke-width="2"/><rect x="386" y="15" width="90" height="90" rx="5" fill="#ff847f22" stroke="#ff847f"/><path d="M389 18l84 84M473 18l-84 84" stroke="#ff847f66"/><text x="495" y="49" fill="#ff847f" font-size="15">196 × 196</text><text x="495" y="71" fill="#ffb5ad" font-size="12">score matrix</text><text x="495" y="91" fill="#ffb5ad" font-size="11">not materialized</text></svg>
+          </div>
+          <div class="card span5"><div class="label">Ready / valid schedule model</div><div class="metricValue" id="trialCount">20</div><p class="small">randomized source gaps + output back-pressure</p><div class="meter"><i data-meter="100"></i></div><div class="check"><b>✓</b><span id="wordCount"></span></div><div class="check"><b>✓</b><span>16 result values per transaction; same protocol schedule completes under stalls.</span></div><div class="check pending"><b>!</b><span>This schedule was simulated in Python, not in an RTL simulator.</span></div></div>
+        </div>
+      </article>
+
+      <article class="slide" data-title="Next proof points">
+        <div class="eyebrow">05 / Next proof points</div>
+        <h2>Next: replace “prepared” with hardware evidence</h2>
+        <p class="subtitle">Click each stage to expand the proof artifact we need before claiming the FPGA demo works.</p>
+        <div class="workflow">
+          <button class="card workStep selected" data-next="bringup"><div class="num">01</div><h3>Bring up board</h3><p class="small">PYNQ image · serial · SSH</p></button>
+          <button class="card workStep" data-next="simulate"><div class="num">02</div><h3>Simulate RTL</h3><p class="small">compile · testbench · logs</p></button>
+          <button class="card workStep" data-next="build"><div class="num">03</div><h3>Build overlay</h3><p class="small">bitstream · timing · resources</p></button>
+          <button class="card workStep" data-next="board"><div class="num">04</div><h3>Run on board</h3><p class="small">DMA · compare · capture result</p></button>
+        </div>
+        <div class="detail" id="nextDetail" aria-live="polite">Proof: boot log, board identity, and successful shell/network access.</div>
+        <div class="layout"><div class="card span8"><div class="label">Sprint 2 demo bar</div><h3 style="font-size:clamp(20px,2.4vw,31px);margin-top:15px">Rebuild it. Simulate it. Run the same seeded vectors on the PYNQ-Z2.</h3><p class="small" style="margin-top:12px">Then integrate projections and real image/model inputs; measure latency and power before claiming 30 FPS or 5 W.</p></div><div class="card span4" style="border-color:#9b604e"><div class="label amber">Current evidence boundary</div><h3 class="amber" style="margin-top:15px">FPGA behavior is not yet verified.</h3></div></div>
+      </article>
+    </div>
+  </section>
+  <footer class="controls">
+    <div class="controlGroup"><button class="btn" id="prev" aria-label="Previous slide">←</button><button class="btn" id="next" aria-label="Next slide">→</button><span class="label" id="counter">1 / 6</span></div>
+    <div class="progress" aria-label="Presentation progress"><i id="progressBar"></i></div>
+    <div class="toolbar"><button class="btn" id="notesBtn">Speaker notes</button><button class="btn" id="pauseBtn">Pause motion</button><button class="btn" id="fullBtn">Fullscreen</button></div>
+  </footer>
+</main>
+<aside class="notes" id="notes" aria-live="polite"></aside>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modalInner"><button class="btn modalClose" id="modalClose">Close ×</button><div class="eyebrow">Acronym / detail</div><h2 id="modalTitle" style="font-size:29px;margin:12px 0"></h2><p id="modalText" class="subtitle" style="font-size:17px"></p></div></div>
+<div class="toast" id="toast" role="status">Use ← → or Space to navigate. Press N for speaker notes.</div>
+<script>
+const DATA = {"notes": ["This Sprint 2 update is about moving from an algorithm we can test in Python toward a small attention kernel for the PYNQ-Z2. The board is now secured. Today\u2019s passing results are still host-side: the SystemVerilog has not been simulated and no bitstream has run on the board. I\u2019ll cover what is implemented, what the numbers show, and the next validation steps.", "The first target is intentionally smaller than a full Vision Transformer. The demo accepts one 32-element query and 196 key/value pairs. For each key, it calculates a dot product and Q12 score, then updates a running maximum and weighted sum. A 64-entry fractional lookup and Q15 weights approximate the exponential. The result is 16 weighted value components. Keys are processed one at a time, so the design does not store a 196-by-196 score table. This is only the attention-normalization kernel; Q/K/V projections and image classification are not included.", "The repository now has four pieces for that path. First is an AXI-stream SystemVerilog module for the fixed-size operation; second, a Vivado Tcl recipe for the Zynq processing system and AXI DMA; third, a PYNQ runner that sends deterministic inputs and compares output with the Python reference; and fourth, a host verification harness and RTL testbench. They are implementation artifacts, not proof the hardware works. The board still needs to boot, the RTL needs to compile and simulate, and the overlay and DMA runner need an end-to-end board test.", "The local verification ran 132 synthetic input cases: four edge cases and 128 repeatable random seeds. It checks the Python integer-arithmetic mirror against the NumPy reference, and also compares against PyTorch. The largest absolute output differences were 0.03124 from Python and 0.03137 from PyTorch. The demo threshold is 0.20 dequantized value units, and every software case was below it. All 64 LUT constants matched Python; 65,536 exponential inputs matched and were monotonic. This supports consistency of the fixed-point model. Inputs are synthetic, and that threshold is a demo setting\u2014not an image-accuracy result.", "The report models 20 ready/valid schedules with randomized input gaps and output back-pressure, accounting for 188,800 input and 320 output words. Source inspection finds no N-by-N score buffer; the modeled state is the query, current key/value, recurrence state, and output accumulators. These checks use Python or source inspection, not SystemVerilog execution. There is no Vivado timing/resource report, power measurement, or board DMA result. The software mirror passes; FPGA behavior remains unverified.", "Now that the board is secured, the next steps are concrete. First, bring up the PYNQ image and verify serial and network access. Then run the HDL testbench in Vivado simulation, fix any issues, and build the overlay. Finally, run the same seeded test through DMA and compare actual board output with Python. The proof we need is a build log, passing simulation, and board comparison. Only then can we claim the kernel works in programmable logic. Next we can add projection MACs, real model inputs, and measure latency and power. This is a step toward the accelerator, not the finished system."], "metrics": {"caseCount": 132, "edgeCases": 4, "seeds": 128, "pythonError": 0.03123858033149235, "torchError": 0.03137490611921102, "tolerance": 0.2, "lutEntries": 64, "expDeltas": 65536, "maxExpError": 0.010684696248608794, "protocolTrials": 20, "inputWords": 188800, "outputWords": 320}};
+const slides = [...document.querySelectorAll(".slide")];
+let current = 0, paused = false, toastTimer;
+const $ = id => document.getElementById(id);
+function showSlide(index) {
+  current = (index + slides.length) % slides.length;
+  slides.forEach((s,i) => { s.classList.toggle("active", i===current); s.setAttribute("aria-hidden",i===current?"false":"true"); });
+  $("counter").textContent = `${current+1} / ${slides.length}`;
+  $("progressBar").style.width = `${100*(current+1)/slides.length}%`;
+  $("notes").innerHTML = `<span class="label">Speaker notes · slide ${current+1}</span><p style="margin-top:12px">${DATA.notes[current]}</p>`;
+  if(current===1) startTokenAnimation();
+  if(current===2) animateMeters();
+  if(current===3) replayMetrics();
+  if(current===4) animateMeters();
+}
+function next(){showSlide(current+1)} function prev(){showSlide(current-1)}
+$("next").addEventListener("click",next); $("prev").addEventListener("click",prev);
+document.addEventListener("keydown",e=>{
+  if($("modal").classList.contains("show")){if(e.key==="Escape")$("modal").classList.remove("show");return}
+  if(["ArrowRight"," ","PageDown"].includes(e.key)){e.preventDefault();next()}
+  if(["ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();prev()}
+  if(e.key.toLowerCase()==="n")$("notes").classList.toggle("show");
+  if(e.key.toLowerCase()==="m")toggleMotion();
+  if(e.key==="Escape")$("notes").classList.remove("show");
+});
+$("notesBtn").addEventListener("click",()=>$("notes").classList.toggle("show"));
+$("fullBtn").addEventListener("click",async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{showToast("Fullscreen is unavailable in this browser.")}});
+function toggleMotion(){paused=!paused;$("app").classList.toggle("pause",paused);$("pauseBtn").textContent=paused?"Resume motion":"Pause motion"}
+$("pauseBtn").addEventListener("click",toggleMotion);
+function showToast(text){$("toast").textContent=text;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),2600)}
+function animateMeters(){document.querySelectorAll(".slide.active [data-meter]").forEach(el=>{el.style.width="0";requestAnimationFrame(()=>el.style.width=el.dataset.meter+"%")})}
+const flowCopy=[...document.querySelectorAll(".flowNode")];
+flowCopy.forEach(button=>button.addEventListener("click",()=>{$("flowDetail").textContent=button.dataset.detail;flowCopy.forEach(b=>b.style.borderColor="");button.style.borderColor="#39d6a2"}));
+const workCopy={rtl:"RTL source exists. It has not yet been compiled or run in an HDL simulator.",build:"A Vivado Tcl build recipe exists. Vivado is unavailable in the current validation environment, so no bitstream has been produced.",driver:"The PYNQ DMA runner is written, but has not yet executed against the physical board or a generated overlay.",tests:"The host verifier ran 132 numeric cases and produced JSON, CSV, Markdown, and SVG reports. This validates a software mirror, not the RTL itself."};
+document.querySelectorAll("[data-work]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-work]").forEach(b=>b.classList.remove("selected"));button.classList.add("selected");$("workDetail").textContent=workCopy[button.dataset.work]}));
+const nextCopy={bringup:"Proof: boot log, board identity, and successful shell/network access.",simulate:"Proof: Vivado compile/elaboration succeeds and the RTL testbench passes with captured simulator output.",build:"Proof: generated bitstream + HWH, implementation timing summary, and resource utilization report.",board:"Proof: repeatable DMA transfer on the physical board and actual output compared against the Python reference."};
+document.querySelectorAll("[data-next]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-next]").forEach(b=>b.classList.remove("selected"));button.classList.add("selected");$("nextDetail").textContent=nextCopy[button.dataset.next]}));
+const explain={
+  "Q12":"A fixed-point score representation with 12 fractional bits. The score is stored as an integer, interpreted as that integer divided by 4096.",
+  "Q15":"A fixed-point weight representation with 15 fractional bits. In this model, 32768 represents weight 1.0.",
+  "Q4":"The demo input/output integer is interpreted with four fractional bits: divide the stored integer by 16 to get its approximate real value.",
+  "AXI stream":"A streaming hardware interface: data is transferred when valid and ready are both high on a clock edge.",
+  "DMA":"Direct Memory Access. The processor asks a DMA engine to move data between memory and the FPGA stream without copying each word itself."
+};
+document.querySelectorAll(".slide").forEach(s=>s.addEventListener("dblclick",e=>{const words=Object.keys(explain);const word=words.find(w=>e.target.textContent.includes(w));if(!word)return;$("modalTitle").textContent=word;$("modalText").textContent=explain[word];$("modal").classList.add("show")}));
+$("modalClose").addEventListener("click",()=>$("modal").classList.remove("show"));
+$("modal").addEventListener("click",e=>{if(e.target===$("modal"))$("modal").classList.remove("show")});
+const tokens=$("tokens");
+for(let i=0;i<196;i++){const dot=document.createElement("i");dot.className="token";tokens.appendChild(dot)}
+let tokenTimer;
+function startTokenAnimation(){clearInterval(tokenTimer);const dots=[...tokens.children];let idx=0;tokenTimer=setInterval(()=>{if(paused)return;dots.forEach(d=>d.classList.remove("hot"));dots[idx%dots.length].classList.add("hot");$("stateBox").classList.add("pulse");setTimeout(()=>$("stateBox").classList.remove("pulse"),170);idx++},90)}
+function replayMetrics(){
+ const m=DATA.metrics;
+ $("toleranceText").textContent=m.tolerance.toFixed(2);
+ $("caseCount").textContent="0";
+ $("pythonMetric").textContent="0.00000"; $("torchMetric").textContent="0.00000";
+ $("pythonBar").style.width="0"; $("torchBar").style.width="0";
+ const grid=$("caseGrid");grid.innerHTML="";
+ let c=0;const caseTimer=setInterval(()=>{if(paused)return;if(c>=m.caseCount){clearInterval(caseTimer);return}
+   const cell=document.createElement("i");cell.className="caseCell";cell.style.animationDelay=`${(c%16)*12}ms`;grid.appendChild(cell);c++;$("caseCount").textContent=c;
+ },8);
+ setTimeout(()=>{if(current!==3)return;$("pythonMetric").textContent=m.pythonError.toFixed(5);$("torchMetric").textContent=m.torchError.toFixed(5);$("pythonBar").style.width=`${Math.min(100,100*m.pythonError/m.tolerance)}%`;$("torchBar").style.width=`${Math.min(100,100*m.torchError/m.tolerance)}%`},850);
+}
+$("replay").addEventListener("click",replayMetrics);
+$("trialCount").textContent=DATA.metrics.protocolTrials;
+$("wordCount").textContent=`${DATA.metrics.inputWords.toLocaleString()} input words and ${DATA.metrics.outputWords.toLocaleString()} output words accounted for across the randomized schedule tests.`;
+showSlide(0);
+setTimeout(()=>showToast("Tip: click diagram stages, press N for notes, or use ← → to navigate."),650);
+</script>
+</body>
+</html>

@@ -1,13 +1,19 @@
 # Sprint 2 Progress — Five-Minute Speaker Script
 
-**Deck:** [Sprint2_Progress.pptx](./Sprint2_Progress.pptx)  
-**Length:** 5:00 at a clear presentation pace  
-**Status snapshot:** 8 November 2026  
+**Deck:** [Sprint2_Progress.pptx](./Sprint2_Progress.pptx)
+**Interactive version:** [Sprint2_Interactive.html](./Sprint2_Interactive.html)
+**Length:** 5:00 at a clear presentation pace
+**Status snapshot:** 8 November 2026
 
 > Accuracy note: the numbers below come from host-side Python tests. The
 > SystemVerilog has not yet been compiled or run in an HDL simulator, a
 > Vivado bitstream has not been built, and the board has not yet run the demo.
 > The PYNQ-Z2 is now secured; physical bring-up is the next proof point.
+
+For the interactive version, navigate with the arrow keys or bottom buttons.
+Click pipeline stages and milestones to expand explanations; use **Speaker
+notes** for the narration, **Pause motion** to stop animations, and
+**Fullscreen** to present.
 
 ## Slide 1 — Sprint 2: from model to board demo (0:30)
 
