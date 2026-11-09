@@ -87,3 +87,8 @@ on a supported Linux workstation and validated on the physical board.
 Host-side verification scripts and generated presentation results are
 documented in [`sim/`](./sim/README.md). Their software mirror is not a
 substitute for RTL simulation or FPGA testing.
+
+The [`Sprint 2 progress deck`](./docs/presentations/Sprint2_Progress.pptx)
+and [timed speaker script](./docs/presentations/Sprint2_Speaker_Script.md)
+summarize the current implementation, software-only validation evidence,
+and remaining hardware verification.
