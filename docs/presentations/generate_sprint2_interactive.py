@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import html
 import json
+import math
 import re
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +20,83 @@ def extract_notes(markdown: str) -> list[str]:
     sections = re.findall(r"## Slide \d+.*?\n\n“(.*?)”", markdown, re.S)
     if len(sections) != 6:
         raise ValueError(f"Expected 6 speaker-script sections; found {len(sections)}")
-    return [html.escape(" ".join(section.split())) for section in sections]
+    interactive_sections = re.findall(
+        r"## Interactive slide: (System diagram|Streaming progress trace)\n\n“(.*?)”",
+        markdown,
+        re.S,
+    )
+    interactive = {title: note for title, note in interactive_sections}
+    if set(interactive) != {"System diagram", "Streaming progress trace"}:
+        raise ValueError("Expected talk tracks for both interactive slides")
+    notes = [html.escape(" ".join(section.split())) for section in sections]
+    notes[3:3] = [html.escape(" ".join(interactive["System diagram"].split()))]
+    notes[5:5] = [
+        html.escape(" ".join(interactive["Streaming progress trace"].split()))
+    ]
+    return notes
+
+
+def build_stream_trace() -> list[dict[str, int | float]]:
+    import numpy as np
+
+    sys.path.insert(0, str(ROOT / "software"))
+    from base2_softmax import WEIGHT_FRACTIONAL_BITS, WEIGHT_ONE, exp_neg_q15, streaming_attention
+
+    rng = np.random.default_rng(20261108)
+
+    def quantize(values: np.ndarray) -> np.ndarray:
+        return np.clip(np.rint(values * 16), -128, 127).astype(np.int8)
+
+    query = quantize(rng.normal(0.0, 0.5, size=32))
+    keys = quantize(rng.normal(0.0, 0.5, size=(196, 32)))
+    values = quantize(rng.normal(0.0, 0.5, size=(196, 16)))
+    query_real = query.astype(np.float64) / 16
+    keys_real = keys.astype(np.float64) / 16
+    values_real = values.astype(np.float64) / 16
+    scores = np.fromiter(
+        (float(np.dot(key, query_real)) / math.sqrt(query.size) for key in keys_real),
+        dtype=np.float64,
+        count=keys.shape[0],
+    )
+    scores_q12 = np.rint(scores * (1 << 12)).astype(np.int64)
+
+    maximum: int | None = None
+    denominator_q15 = 0
+    accumulator = np.zeros(values.shape[1], dtype=np.float64)
+    trace: list[dict[str, int | float]] = []
+    for index, (score_value, value) in enumerate(zip(scores_q12, values_real)):
+        score = int(score_value)
+        if maximum is None:
+            maximum = score
+            denominator_q15 = WEIGHT_ONE
+            accumulator = value.copy()
+        else:
+            new_maximum = max(maximum, score)
+            alpha = exp_neg_q15(new_maximum - maximum, 12)
+            beta = exp_neg_q15(new_maximum - score, 12)
+            denominator_q15 = (
+                (denominator_q15 * alpha) >> WEIGHT_FRACTIONAL_BITS
+            ) + beta
+            accumulator = (
+                accumulator * (alpha / WEIGHT_ONE)
+                + value * (beta / WEIGHT_ONE)
+            )
+            maximum = new_maximum
+
+        trace.append(
+            {
+                "token": index + 1,
+                "scoreQ12": score,
+                "maxQ12": maximum,
+                "denominatorQ15": denominator_q15,
+                "output0": float(accumulator[0] / (denominator_q15 / WEIGHT_ONE)),
+            }
+        )
+
+    reference = streaming_attention(query_real, keys_real, values_real)
+    if not math.isclose(trace[-1]["output0"], float(reference[0]), abs_tol=1e-12):
+        raise AssertionError("streaming trace does not match the reference output")
+    return trace
 
 
 def build_html(report: dict, notes: list[str]) -> str:
@@ -27,6 +105,7 @@ def build_html(report: dict, notes: list[str]) -> str:
     protocol = report["protocol"]
     data = {
         "notes": notes,
+        "trace": build_stream_trace(),
         "metrics": {
             "caseCount": numeric["numeric_cases"],
             "edgeCases": numeric["deterministic_edge_cases"],
@@ -152,6 +231,39 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
 .caseGrid { display:grid;grid-template-columns:repeat(16,1fr);gap:5px }
 .caseCell { aspect-ratio:1;border-radius:3px;background:#39d6a2; opacity:.82; animation:caseIn .35s both }
 @keyframes caseIn { from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:.82} }
+.diagramFrame,.traceFrame { border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#101d2d,#0c1725);overflow:hidden }
+.diagramFrame { height:min(42vh,420px);min-height:220px;display:flex;justify-content:center;flex:none }
+.systemDiagram { display:block;width:100%;height:100%;max-height:100% }
+.slide[data-title="System diagram"] h2 { font-size:clamp(24px,3.4vw,42px) }
+.systemDiagram .zone { fill:#142338;stroke:#45617e;stroke-width:2 }
+.systemDiagram .node { fill:#1b3048;stroke:#54708f;stroke-width:2 }
+.systemDiagram .nodeAccent { fill:#17382f;stroke:#39d6a2;stroke-width:2 }
+.systemDiagram .wire { fill:none;stroke:#72aaff;stroke-width:3;marker-end:url(#arrowBlue) }
+.systemDiagram .wireGreen { fill:none;stroke:#39d6a2;stroke-width:3;marker-end:url(#arrowGreen) }
+.systemDiagram .wireControl { fill:none;stroke:#ffbe60;stroke-width:2;stroke-dasharray:8 7;marker-end:url(#arrowAmber) }
+.systemDiagram text { font-family:inherit;fill:#f2f7fc }
+.systemDiagram .caption { fill:#91a4bc;font-size:13px }
+.systemDiagram .zoneTitle { fill:#72aaff;font-size:16px;font-weight:800;letter-spacing:2px }
+.systemDiagram .packet { fill:#b9d8ff;filter:drop-shadow(0 0 7px #72aaff) }
+.systemDiagram .packetOut { fill:#39d6a2;filter:drop-shadow(0 0 7px #39d6a2) }
+.systemDiagram .pulseNode { transform-box:fill-box;transform-origin:center;animation:nodePulse 2.4s ease-in-out infinite }
+.systemDiagram .pulseNode:nth-of-type(2) { animation-delay:.8s }
+.systemDiagram .pulseNode:nth-of-type(3) { animation-delay:1.6s }
+@keyframes nodePulse { 50%{filter:drop-shadow(0 0 14px #39d6a266);stroke:#74f0c5} }
+.traceFrame { padding:14px 18px 8px }
+.tracePlot { width:100%;height:auto;display:block }
+.traceGrid { stroke:#53698055;stroke-width:1 }
+.traceFull { fill:none;stroke:#72aaff55;stroke-width:3 }
+.traceShown { fill:none;stroke:#39d6a2;stroke-width:4;stroke-linecap:round;stroke-linejoin:round }
+.traceCursor { stroke:#ffbe60;stroke-width:2;stroke-dasharray:5 6 }
+.traceDot { fill:#ffbe60;stroke:#fff1cf;stroke-width:2;filter:drop-shadow(0 0 9px #ffbe60) }
+.traceStats { display:grid;grid-template-columns:repeat(5,1fr);gap:10px }
+.traceStat { border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:#142338 }
+.traceStat strong { display:block;margin-top:6px;font-size:clamp(16px,2vw,24px);font-variant-numeric:tabular-nums }
+.traceControls { display:flex;align-items:center;gap:8px;flex-wrap:wrap }
+.traceControls .fine { margin-left:auto }
+.traceEquation { display:flex;justify-content:center;gap:10px;flex-wrap:wrap }
+.traceEquation .eq { font-size:clamp(12px,1.3vw,17px) }
 .fine { font-size:11px; line-height:1.45; color:var(--muted) }
 .pause * { animation-play-state:paused !important }
 @media(max-width:850px) {
@@ -189,7 +301,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
               <div><span class="label"><i class="dot"></i> Software mirror</span><strong class="green">Checks pass</strong></div>
               <div><span class="label">FPGA / board</span><strong class="amber">Not yet tested</strong></div>
             </div>
-            <span class="pill">5-minute Sprint 2 update <span class="blue">·</span> use ← → to navigate</span>
+            <span class="pill">Interactive Sprint 2 presentation <span class="blue">·</span> use ← → to navigate</span>
           </div>
           <div class="orbit" aria-hidden="true"><i class="orbitNode"></i><i class="orbitNode"></i><i class="orbitNode"></i><div class="core">STREAM</div></div>
         </div>
@@ -237,8 +349,63 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
         <div class="layout"><div class="card span6"><div class="label">Milestone tracker</div><div class="meterRow"><span>Software model</span><div class="meter"><i data-meter="100"></i></div><b class="green">TESTED</b></div><div class="meterRow"><span>RTL source</span><div class="meter"><i data-meter="65"></i></div><b class="amber">WRITTEN</b></div><div class="meterRow"><span>Board demo</span><div class="meter"><i data-meter="15"></i></div><b class="amber">PENDING</b></div></div><div class="card span6"><div class="label">What changed this sprint</div><h3 style="margin-top:12px">The board is secured.</h3><p class="small" style="margin-top:10px">Next evidence: boot and connect the PYNQ-Z2, simulate the RTL, build the bitstream, then run the same vectors through DMA.</p></div></div>
       </article>
 
+      <article class="slide" data-title="System diagram">
+        <div class="eyebrow">03 / Proposed board system</div>
+        <h2>One streamed path from DDR to attention output</h2>
+        <p class="subtitle">The moving packets show the intended PYNQ-Z2 data flow: ARM software prepares and checks; DMA streams through the programmable-logic kernel.</p>
+        <div class="diagramFrame">
+          <svg class="systemDiagram" id="systemDiagram" viewBox="0 0 1200 480" role="img" aria-label="Animated PYNQ-Z2 system diagram showing Python on ARM, DDR buffers, AXI DMA, streaming attention in programmable logic, and output comparison">
+            <defs>
+              <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#72aaff"/></marker>
+              <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#39d6a2"/></marker>
+              <marker id="arrowAmber" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ffbe60"/></marker>
+            </defs>
+            <rect class="zone" x="22" y="46" width="290" height="390" rx="22"/>
+            <text class="zoneTitle" x="48" y="78">PROCESSING SYSTEM</text>
+            <text class="caption" x="48" y="101">ARM Cortex-A9 · PYNQ Linux</text>
+            <rect class="node" x="50" y="128" width="230" height="92" rx="16"/>
+            <text x="72" y="163" font-size="20" font-weight="800">Python app</text>
+            <text class="caption" x="72" y="189">pack inputs · configure DMA</text>
+            <rect class="node" x="50" y="286" width="230" height="100" rx="16"/>
+            <text x="72" y="322" font-size="20" font-weight="800">DDR buffers</text>
+            <text class="caption" x="72" y="348">Q / K / V input · 16 outputs</text>
+            <text class="caption" x="72" y="369">Python reads result + compares</text>
+            <path class="wireControl" d="M280 162 C340 162 335 128 394 128" />
+            <text class="caption" x="304" y="115">AXI-Lite control</text>
+            <path class="wire" d="M280 330 C330 330 342 215 394 215" />
+            <text class="caption" x="300" y="292">HP0 memory read</text>
+            <path class="wireGreen" d="M394 260 C350 290 327 326 280 360" />
+            <text class="caption" x="301" y="396">S2MM write to DDR</text>
+
+            <rect class="zone" x="354" y="46" width="820" height="390" rx="22"/>
+            <text class="zoneTitle" x="382" y="78">PROGRAMMABLE LOGIC</text>
+            <text class="caption" x="382" y="101">AXI DMA moves data; custom attention core updates m, l, a per key</text>
+            <rect class="node" x="394" y="146" width="190" height="138" rx="17"/>
+            <text x="416" y="181" font-size="19" font-weight="800">AXI DMA</text>
+            <text class="caption" x="416" y="208">MM2S · memory to stream</text>
+            <text class="caption" x="416" y="233">S2MM · stream to memory</text>
+            <text class="caption" x="416" y="258">32-bit AXI words</text>
+            <rect class="nodeAccent pulseNode" x="700" y="146" width="238" height="138" rx="17"/>
+            <text x="724" y="181" font-size="19" font-weight="800">Attention core</text>
+            <text class="caption" x="724" y="208">QK score · Q12</text>
+            <text class="caption" x="724" y="233">64-entry LUT · online softmax</text>
+            <text class="caption" x="724" y="258">16 running value accumulators</text>
+            <path id="sysInPath" class="wire" d="M584 205 L700 205"/>
+            <text class="caption" x="642" y="188" text-anchor="middle">MM2S input stream</text>
+            <path id="sysOutPath" class="wireGreen" d="M700 250 C666 292 620 292 584 250"/>
+            <text class="caption" x="595" y="318">S2MM AXI4-Stream · 16 outputs</text>
+            <text class="caption" x="704" y="365">Python reads output buffer and compares with NumPy reference</text>
+            <circle class="packet" r="7"><animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#sysInPath"/></animateMotion></circle>
+            <circle class="packet" r="5"><animateMotion dur="2.8s" begin="-1.4s" repeatCount="indefinite"><mpath href="#sysInPath"/></animateMotion></circle>
+            <circle class="packetOut" r="7"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#sysOutPath"/></animateMotion></circle>
+            <circle class="packetOut" r="5"><animateMotion dur="2.2s" begin="-1.1s" repeatCount="indefinite"><mpath href="#sysOutPath"/></animateMotion></circle>
+          </svg>
+        </div>
+        <p class="fine">Architecture diagram reflects the build recipe and PYNQ runner. Hardware execution, DMA timing, and FPGA output are not yet verified.</p>
+      </article>
+
       <article class="slide" data-title="Numerical evidence">
-        <div class="eyebrow">03 / Numerical evidence</div>
+        <div class="eyebrow">04 / Numerical evidence</div>
         <h2>132 synthetic cases stayed within the demo threshold</h2>
         <p class="subtitle">Four deterministic edge cases plus 128 seeded random vectors. Click “replay” to animate the result comparison.</p>
         <div class="layout">
@@ -250,8 +417,49 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
         <p class="fine">Synthetic inputs only. The tolerance is a demo acceptance setting, not a measured image-accuracy requirement.</p>
       </article>
 
+      <article class="slide" data-title="Streaming progress trace">
+        <div class="eyebrow">04 / Animated progress trace</div>
+        <h2>Watch the answer settle as keys stream in</h2>
+        <p class="subtitle">A deterministic synthetic transaction is replayed through the NumPy running-max / running-sum recurrence. Each update uses the next key/value row; no score matrix is formed.</p>
+        <div class="traceStats">
+          <div class="traceStat"><span class="label">Keys consumed</span><strong id="traceToken" class="blue">1 / 196</strong></div>
+          <div class="traceStat"><span class="label">Current score · Q12</span><strong id="traceScore">—</strong></div>
+          <div class="traceStat"><span class="label">Running max · Q12</span><strong id="traceMax" class="amber">—</strong></div>
+          <div class="traceStat"><span class="label">Running sum · Q15</span><strong id="traceDenom" class="blue">—</strong></div>
+          <div class="traceStat"><span class="label">Output value[0]</span><strong id="traceOutput" class="green">—</strong></div>
+        </div>
+        <div class="traceFrame">
+          <svg class="tracePlot" id="tracePlot" viewBox="0 0 900 250" role="img" aria-label="Animated trace of the first normalized attention output value as the 196 key-value tokens are streamed">
+            <line class="traceGrid" x1="74" y1="35" x2="876" y2="35"/>
+            <line class="traceGrid" x1="74" y1="92" x2="876" y2="92"/>
+            <line class="traceGrid" x1="74" y1="149" x2="876" y2="149"/>
+            <line class="traceGrid" x1="74" y1="206" x2="876" y2="206"/>
+            <text id="traceYTop" x="8" y="40" fill="#91a4bc" font-size="12"></text>
+            <text id="traceYBottom" x="8" y="211" fill="#91a4bc" font-size="12"></text>
+            <text x="74" y="235" fill="#91a4bc" font-size="12">first key</text>
+            <text x="820" y="235" fill="#91a4bc" font-size="12">196 keys</text>
+            <path class="traceFull" id="traceFull"/>
+            <path class="traceShown" id="traceShown"/>
+            <line class="traceCursor" id="traceCursor" x1="74" y1="25" x2="74" y2="210"/>
+            <circle class="traceDot" id="traceDot" cx="74" cy="210" r="7"/>
+          </svg>
+        </div>
+        <div class="traceControls">
+          <button class="btn" type="button" id="tracePlay">▶ Play stream</button>
+          <button class="btn" type="button" id="traceStep">Step one key</button>
+          <button class="btn" type="button" id="traceReset">↺ Restart</button>
+          <span class="fine">One Python reference-model trace · fixed seed 20261108 · not an FPGA waveform</span>
+        </div>
+        <div class="traceEquation">
+          <span class="eq mono">m′ = max(m, x)</span>
+          <span class="eq mono">l′ = αl + β</span>
+          <span class="eq mono">a′ = αa + βv</span>
+          <span class="eq mono">output = a / l</span>
+        </div>
+      </article>
+
       <article class="slide" data-title="Streaming evidence">
-        <div class="eyebrow">04 / Streaming evidence</div>
+        <div class="eyebrow">06 / Streaming evidence</div>
         <h2>The software checks support the streaming design claim</h2>
         <p class="subtitle">The design stores working state as it consumes keys. The checks below model expected behavior; they do not execute the SystemVerilog.</p>
         <div class="layout">
@@ -269,7 +477,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
       </article>
 
       <article class="slide" data-title="Next proof points">
-        <div class="eyebrow">05 / Next proof points</div>
+        <div class="eyebrow">07 / Next proof points</div>
         <h2>Next: replace “prepared” with hardware evidence</h2>
         <p class="subtitle">Click each stage to expand the proof artifact we need before claiming the FPGA demo works.</p>
         <div class="workflow">
@@ -303,10 +511,13 @@ function showSlide(index) {
   $("counter").textContent = `${current+1} / ${slides.length}`;
   $("progressBar").style.width = `${100*(current+1)/slides.length}%`;
   $("notes").innerHTML = `<span class="label">Speaker notes · slide ${current+1}</span><p style="margin-top:12px">${DATA.notes[current]}</p>`;
-  if(current===1) startTokenAnimation();
-  if(current===2) animateMeters();
-  if(current===3) replayMetrics();
-  if(current===4) animateMeters();
+  const title = slides[current].dataset.title;
+  if(title==="Attention flow") startTokenAnimation();
+  if(title==="Implementation progress" || title==="Streaming evidence") animateMeters();
+  if(title==="System diagram") syncSystemMotion();
+  if(title==="Numerical evidence") replayMetrics();
+  if(title==="Streaming progress trace") startTraceAnimation(true);
+  else stopTraceAnimation();
 }
 function next(){showSlide(current+1)} function prev(){showSlide(current-1)}
 $("next").addEventListener("click",next); $("prev").addEventListener("click",prev);
@@ -320,7 +531,8 @@ document.addEventListener("keydown",e=>{
 });
 $("notesBtn").addEventListener("click",()=>$("notes").classList.toggle("show"));
 $("fullBtn").addEventListener("click",async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{showToast("Fullscreen is unavailable in this browser.")}});
-function toggleMotion(){paused=!paused;$("app").classList.toggle("pause",paused);$("pauseBtn").textContent=paused?"Resume motion":"Pause motion"}
+function syncSystemMotion(){const svg=$("systemDiagram");if(!svg)return;if(paused)svg.pauseAnimations();else svg.unpauseAnimations()}
+function toggleMotion(){paused=!paused;$("app").classList.toggle("pause",paused);$("pauseBtn").textContent=paused?"Resume motion":"Pause motion";syncSystemMotion()}
 $("pauseBtn").addEventListener("click",toggleMotion);
 function showToast(text){$("toast").textContent=text;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),2600)}
 function animateMeters(){document.querySelectorAll(".slide.active [data-meter]").forEach(el=>{el.style.width="0";requestAnimationFrame(()=>el.style.width=el.dataset.meter+"%")})}
@@ -354,9 +566,54 @@ function replayMetrics(){
  let c=0;const caseTimer=setInterval(()=>{if(paused)return;if(c>=m.caseCount){clearInterval(caseTimer);return}
    const cell=document.createElement("i");cell.className="caseCell";cell.style.animationDelay=`${(c%16)*12}ms`;grid.appendChild(cell);c++;$("caseCount").textContent=c;
  },8);
- setTimeout(()=>{if(current!==3)return;$("pythonMetric").textContent=m.pythonError.toFixed(5);$("torchMetric").textContent=m.torchError.toFixed(5);$("pythonBar").style.width=`${Math.min(100,100*m.pythonError/m.tolerance)}%`;$("torchBar").style.width=`${Math.min(100,100*m.torchError/m.tolerance)}%`},850);
+ setTimeout(()=>{if(slides[current].dataset.title!=="Numerical evidence")return;$("pythonMetric").textContent=m.pythonError.toFixed(5);$("torchMetric").textContent=m.torchError.toFixed(5);$("pythonBar").style.width=`${Math.min(100,100*m.pythonError/m.tolerance)}%`;$("torchBar").style.width=`${Math.min(100,100*m.torchError/m.tolerance)}%`},850);
 }
 $("replay").addEventListener("click",replayMetrics);
+let traceIndex=0, traceTimer, traceRun=0;
+const traceValues=DATA.trace.map(point=>point.output0);
+const traceLow=Math.min(...traceValues), traceHigh=Math.max(...traceValues);
+const tracePad=(traceHigh-traceLow)*.12||.1;
+const traceY=value=>206-(value-(traceLow-tracePad))/(traceHigh-traceLow+2*tracePad)*171;
+const traceX=index=>74+index/(DATA.trace.length-1)*802;
+const tracePath=DATA.trace.map((point,index)=>`${index?"L":"M"}${traceX(index).toFixed(2)} ${traceY(point.output0).toFixed(2)}`).join(" ");
+$("traceFull").setAttribute("d",tracePath);
+$("traceYTop").textContent=(traceHigh+tracePad).toFixed(2);
+$("traceYBottom").textContent=(traceLow-tracePad).toFixed(2);
+function renderTrace(index){
+ traceIndex=Math.max(0,Math.min(DATA.trace.length-1,index));
+ const point=DATA.trace[traceIndex], x=traceX(traceIndex), y=traceY(point.output0);
+ $("traceShown").setAttribute("d",DATA.trace.slice(0,traceIndex+1).map((item,i)=>`${i?"L":"M"}${traceX(i).toFixed(2)} ${traceY(item.output0).toFixed(2)}`).join(" "));
+ $("traceCursor").setAttribute("x1",x);$("traceCursor").setAttribute("x2",x);
+ $("traceDot").setAttribute("cx",x);$("traceDot").setAttribute("cy",y);
+ $("traceToken").textContent=`${point.token} / ${DATA.trace.length}`;
+ $("traceScore").textContent=point.scoreQ12.toLocaleString();
+ $("traceMax").textContent=point.maxQ12.toLocaleString();
+ $("traceDenom").textContent=point.denominatorQ15.toLocaleString();
+ $("traceOutput").textContent=point.output0.toFixed(4);
+}
+function startTraceAnimation(reset){
+ stopTraceAnimation();
+ if(reset)renderTrace(0);
+ $("tracePlay").textContent="Ⅱ Pause stream";
+ const run=traceRun;
+ traceTimer=setInterval(()=>{
+   if(run!==traceRun)return;
+   if(paused||slides[current].dataset.title!=="Streaming progress trace")return;
+   if(traceIndex>=DATA.trace.length-1){clearInterval(traceTimer);traceTimer=null;$("tracePlay").textContent="▶ Play stream";return}
+   renderTrace(traceIndex+1);
+ },65);
+}
+function stopTraceAnimation(){clearInterval(traceTimer);traceTimer=null;traceRun++}
+$("tracePlay").addEventListener("click",()=>{
+ if(traceTimer){stopTraceAnimation();$("tracePlay").textContent="▶ Play stream"}
+ else {if(traceIndex>=DATA.trace.length-1)traceIndex=0;startTraceAnimation(false)}
+});
+$("traceStep").addEventListener("click",()=>{
+ stopTraceAnimation();$("tracePlay").textContent="▶ Play stream";
+ renderTrace(traceIndex>=DATA.trace.length-1?0:traceIndex+1);
+});
+$("traceReset").addEventListener("click",()=>startTraceAnimation(true));
+renderTrace(0);
 $("trialCount").textContent=DATA.metrics.protocolTrials;
 $("wordCount").textContent=`${DATA.metrics.inputWords.toLocaleString()} input words and ${DATA.metrics.outputWords.toLocaleString()} output words accounted for across the randomized schedule tests.`;
 showSlide(0);

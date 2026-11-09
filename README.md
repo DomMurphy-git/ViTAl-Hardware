@@ -93,5 +93,7 @@ and [timed speaker script](./docs/presentations/Sprint2_Speaker_Script.md)
 summarize the current implementation, software-only validation evidence,
 and remaining hardware verification. The
 [interactive Sprint 2 presentation](./docs/presentations/Sprint2_Interactive.html)
-adds animated diagrams, clickable explanations, and slide-by-slide speaker
-notes; open it in a browser and use the arrow keys or on-screen controls.
+adds an animated data-path diagram and a model-generated attention progress
+trace, alongside clickable explanations and speaker notes. It is an expanded
+eight-slide browser deck; open it in a browser and use the arrow keys or
+on-screen controls.

@@ -2,7 +2,7 @@
 
 **Deck:** [Sprint2_Progress.pptx](./Sprint2_Progress.pptx)
 **Interactive version:** [Sprint2_Interactive.html](./Sprint2_Interactive.html)
-**Length:** 5:00 at a clear presentation pace
+**PowerPoint length:** 5:00 at a clear presentation pace
 **Status snapshot:** 8 November 2026
 
 > Accuracy note: the numbers below come from host-side Python tests. The
@@ -14,6 +14,8 @@ For the interactive version, navigate with the arrow keys or bottom buttons.
 Click pipeline stages and milestones to expand explanations; use **Speaker
 notes** for the narration, **Pause motion** to stop animations, and
 **Fullscreen** to present.
+The browser version adds two slides beyond the timed PowerPoint; optional
+talk tracks for those slides follow the timing table.
 
 ## Slide 1 — Sprint 2: from model to board demo (0:30)
 
@@ -96,6 +98,25 @@ is a step toward the accelerator, not the finished system.”
 | 5. Streaming evidence and its limits | 0:50 |
 | 6. The next proof points | 0:55 |
 | **Total** | **5:00** |
+
+## Interactive slide: System diagram
+
+“This is the proposed PYNQ-Z2 data path, not a photograph of a working board.
+Python on the ARM processor prepares signed Q4 query, key, and value words in
+DDR and configures the AXI DMA. The DMA streams those words into the
+programmable-logic attention core. The core returns 16 output values through
+the receive side of DMA; Python reads them back and compares against its NumPy
+reference.”
+
+## Interactive slide: Streaming progress trace
+
+“This animation replays one fixed-seed synthetic input through the same NumPy
+online recurrence used as the reference. Each point is one key/value row: the
+running maximum and denominator update, and the first normalized output
+component settles as more rows arrive. The chart is a software-model trace,
+not an RTL waveform or board result. The important architectural point is
+that the core carries m, l, and the value accumulator forward instead of
+storing a 196 by 196 score table.”
 
 ## Source data
 

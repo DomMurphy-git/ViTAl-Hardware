@@ -107,6 +107,39 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
 .caseGrid { display:grid;grid-template-columns:repeat(16,1fr);gap:5px }
 .caseCell { aspect-ratio:1;border-radius:3px;background:#39d6a2; opacity:.82; animation:caseIn .35s both }
 @keyframes caseIn { from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:.82} }
+.diagramFrame,.traceFrame { border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#101d2d,#0c1725);overflow:hidden }
+.diagramFrame { height:min(42vh,420px);min-height:220px;display:flex;justify-content:center;flex:none }
+.systemDiagram { display:block;width:100%;height:100%;max-height:100% }
+.slide[data-title="System diagram"] h2 { font-size:clamp(24px,3.4vw,42px) }
+.systemDiagram .zone { fill:#142338;stroke:#45617e;stroke-width:2 }
+.systemDiagram .node { fill:#1b3048;stroke:#54708f;stroke-width:2 }
+.systemDiagram .nodeAccent { fill:#17382f;stroke:#39d6a2;stroke-width:2 }
+.systemDiagram .wire { fill:none;stroke:#72aaff;stroke-width:3;marker-end:url(#arrowBlue) }
+.systemDiagram .wireGreen { fill:none;stroke:#39d6a2;stroke-width:3;marker-end:url(#arrowGreen) }
+.systemDiagram .wireControl { fill:none;stroke:#ffbe60;stroke-width:2;stroke-dasharray:8 7;marker-end:url(#arrowAmber) }
+.systemDiagram text { font-family:inherit;fill:#f2f7fc }
+.systemDiagram .caption { fill:#91a4bc;font-size:13px }
+.systemDiagram .zoneTitle { fill:#72aaff;font-size:16px;font-weight:800;letter-spacing:2px }
+.systemDiagram .packet { fill:#b9d8ff;filter:drop-shadow(0 0 7px #72aaff) }
+.systemDiagram .packetOut { fill:#39d6a2;filter:drop-shadow(0 0 7px #39d6a2) }
+.systemDiagram .pulseNode { transform-box:fill-box;transform-origin:center;animation:nodePulse 2.4s ease-in-out infinite }
+.systemDiagram .pulseNode:nth-of-type(2) { animation-delay:.8s }
+.systemDiagram .pulseNode:nth-of-type(3) { animation-delay:1.6s }
+@keyframes nodePulse { 50%{filter:drop-shadow(0 0 14px #39d6a266);stroke:#74f0c5} }
+.traceFrame { padding:14px 18px 8px }
+.tracePlot { width:100%;height:auto;display:block }
+.traceGrid { stroke:#53698055;stroke-width:1 }
+.traceFull { fill:none;stroke:#72aaff55;stroke-width:3 }
+.traceShown { fill:none;stroke:#39d6a2;stroke-width:4;stroke-linecap:round;stroke-linejoin:round }
+.traceCursor { stroke:#ffbe60;stroke-width:2;stroke-dasharray:5 6 }
+.traceDot { fill:#ffbe60;stroke:#fff1cf;stroke-width:2;filter:drop-shadow(0 0 9px #ffbe60) }
+.traceStats { display:grid;grid-template-columns:repeat(5,1fr);gap:10px }
+.traceStat { border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:#142338 }
+.traceStat strong { display:block;margin-top:6px;font-size:clamp(16px,2vw,24px);font-variant-numeric:tabular-nums }
+.traceControls { display:flex;align-items:center;gap:8px;flex-wrap:wrap }
+.traceControls .fine { margin-left:auto }
+.traceEquation { display:flex;justify-content:center;gap:10px;flex-wrap:wrap }
+.traceEquation .eq { font-size:clamp(12px,1.3vw,17px) }
 .fine { font-size:11px; line-height:1.45; color:var(--muted) }
 .pause * { animation-play-state:paused !important }
 @media(max-width:850px) {
@@ -144,7 +177,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
               <div><span class="label"><i class="dot"></i> Software mirror</span><strong class="green">Checks pass</strong></div>
               <div><span class="label">FPGA / board</span><strong class="amber">Not yet tested</strong></div>
             </div>
-            <span class="pill">5-minute Sprint 2 update <span class="blue">·</span> use ← → to navigate</span>
+            <span class="pill">Interactive Sprint 2 presentation <span class="blue">·</span> use ← → to navigate</span>
           </div>
           <div class="orbit" aria-hidden="true"><i class="orbitNode"></i><i class="orbitNode"></i><i class="orbitNode"></i><div class="core">STREAM</div></div>
         </div>
@@ -192,8 +225,63 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
         <div class="layout"><div class="card span6"><div class="label">Milestone tracker</div><div class="meterRow"><span>Software model</span><div class="meter"><i data-meter="100"></i></div><b class="green">TESTED</b></div><div class="meterRow"><span>RTL source</span><div class="meter"><i data-meter="65"></i></div><b class="amber">WRITTEN</b></div><div class="meterRow"><span>Board demo</span><div class="meter"><i data-meter="15"></i></div><b class="amber">PENDING</b></div></div><div class="card span6"><div class="label">What changed this sprint</div><h3 style="margin-top:12px">The board is secured.</h3><p class="small" style="margin-top:10px">Next evidence: boot and connect the PYNQ-Z2, simulate the RTL, build the bitstream, then run the same vectors through DMA.</p></div></div>
       </article>
 
+      <article class="slide" data-title="System diagram">
+        <div class="eyebrow">03 / Proposed board system</div>
+        <h2>One streamed path from DDR to attention output</h2>
+        <p class="subtitle">The moving packets show the intended PYNQ-Z2 data flow: ARM software prepares and checks; DMA streams through the programmable-logic kernel.</p>
+        <div class="diagramFrame">
+          <svg class="systemDiagram" id="systemDiagram" viewBox="0 0 1200 480" role="img" aria-label="Animated PYNQ-Z2 system diagram showing Python on ARM, DDR buffers, AXI DMA, streaming attention in programmable logic, and output comparison">
+            <defs>
+              <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#72aaff"/></marker>
+              <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#39d6a2"/></marker>
+              <marker id="arrowAmber" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ffbe60"/></marker>
+            </defs>
+            <rect class="zone" x="22" y="46" width="290" height="390" rx="22"/>
+            <text class="zoneTitle" x="48" y="78">PROCESSING SYSTEM</text>
+            <text class="caption" x="48" y="101">ARM Cortex-A9 · PYNQ Linux</text>
+            <rect class="node" x="50" y="128" width="230" height="92" rx="16"/>
+            <text x="72" y="163" font-size="20" font-weight="800">Python app</text>
+            <text class="caption" x="72" y="189">pack inputs · configure DMA</text>
+            <rect class="node" x="50" y="286" width="230" height="100" rx="16"/>
+            <text x="72" y="322" font-size="20" font-weight="800">DDR buffers</text>
+            <text class="caption" x="72" y="348">Q / K / V input · 16 outputs</text>
+            <text class="caption" x="72" y="369">Python reads result + compares</text>
+            <path class="wireControl" d="M280 162 C340 162 335 128 394 128" />
+            <text class="caption" x="304" y="115">AXI-Lite control</text>
+            <path class="wire" d="M280 330 C330 330 342 215 394 215" />
+            <text class="caption" x="300" y="292">HP0 memory read</text>
+            <path class="wireGreen" d="M394 260 C350 290 327 326 280 360" />
+            <text class="caption" x="301" y="396">S2MM write to DDR</text>
+
+            <rect class="zone" x="354" y="46" width="820" height="390" rx="22"/>
+            <text class="zoneTitle" x="382" y="78">PROGRAMMABLE LOGIC</text>
+            <text class="caption" x="382" y="101">AXI DMA moves data; custom attention core updates m, l, a per key</text>
+            <rect class="node" x="394" y="146" width="190" height="138" rx="17"/>
+            <text x="416" y="181" font-size="19" font-weight="800">AXI DMA</text>
+            <text class="caption" x="416" y="208">MM2S · memory to stream</text>
+            <text class="caption" x="416" y="233">S2MM · stream to memory</text>
+            <text class="caption" x="416" y="258">32-bit AXI words</text>
+            <rect class="nodeAccent pulseNode" x="700" y="146" width="238" height="138" rx="17"/>
+            <text x="724" y="181" font-size="19" font-weight="800">Attention core</text>
+            <text class="caption" x="724" y="208">QK score · Q12</text>
+            <text class="caption" x="724" y="233">64-entry LUT · online softmax</text>
+            <text class="caption" x="724" y="258">16 running value accumulators</text>
+            <path id="sysInPath" class="wire" d="M584 205 L700 205"/>
+            <text class="caption" x="642" y="188" text-anchor="middle">MM2S input stream</text>
+            <path id="sysOutPath" class="wireGreen" d="M700 250 C666 292 620 292 584 250"/>
+            <text class="caption" x="595" y="318">S2MM AXI4-Stream · 16 outputs</text>
+            <text class="caption" x="704" y="365">Python reads output buffer and compares with NumPy reference</text>
+            <circle class="packet" r="7"><animateMotion dur="2.8s" repeatCount="indefinite"><mpath href="#sysInPath"/></animateMotion></circle>
+            <circle class="packet" r="5"><animateMotion dur="2.8s" begin="-1.4s" repeatCount="indefinite"><mpath href="#sysInPath"/></animateMotion></circle>
+            <circle class="packetOut" r="7"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#sysOutPath"/></animateMotion></circle>
+            <circle class="packetOut" r="5"><animateMotion dur="2.2s" begin="-1.1s" repeatCount="indefinite"><mpath href="#sysOutPath"/></animateMotion></circle>
+          </svg>
+        </div>
+        <p class="fine">Architecture diagram reflects the build recipe and PYNQ runner. Hardware execution, DMA timing, and FPGA output are not yet verified.</p>
+      </article>
+
       <article class="slide" data-title="Numerical evidence">
-        <div class="eyebrow">03 / Numerical evidence</div>
+        <div class="eyebrow">04 / Numerical evidence</div>
         <h2>132 synthetic cases stayed within the demo threshold</h2>
         <p class="subtitle">Four deterministic edge cases plus 128 seeded random vectors. Click “replay” to animate the result comparison.</p>
         <div class="layout">
@@ -205,8 +293,49 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
         <p class="fine">Synthetic inputs only. The tolerance is a demo acceptance setting, not a measured image-accuracy requirement.</p>
       </article>
 
+      <article class="slide" data-title="Streaming progress trace">
+        <div class="eyebrow">04 / Animated progress trace</div>
+        <h2>Watch the answer settle as keys stream in</h2>
+        <p class="subtitle">A deterministic synthetic transaction is replayed through the NumPy running-max / running-sum recurrence. Each update uses the next key/value row; no score matrix is formed.</p>
+        <div class="traceStats">
+          <div class="traceStat"><span class="label">Keys consumed</span><strong id="traceToken" class="blue">1 / 196</strong></div>
+          <div class="traceStat"><span class="label">Current score · Q12</span><strong id="traceScore">—</strong></div>
+          <div class="traceStat"><span class="label">Running max · Q12</span><strong id="traceMax" class="amber">—</strong></div>
+          <div class="traceStat"><span class="label">Running sum · Q15</span><strong id="traceDenom" class="blue">—</strong></div>
+          <div class="traceStat"><span class="label">Output value[0]</span><strong id="traceOutput" class="green">—</strong></div>
+        </div>
+        <div class="traceFrame">
+          <svg class="tracePlot" id="tracePlot" viewBox="0 0 900 250" role="img" aria-label="Animated trace of the first normalized attention output value as the 196 key-value tokens are streamed">
+            <line class="traceGrid" x1="74" y1="35" x2="876" y2="35"/>
+            <line class="traceGrid" x1="74" y1="92" x2="876" y2="92"/>
+            <line class="traceGrid" x1="74" y1="149" x2="876" y2="149"/>
+            <line class="traceGrid" x1="74" y1="206" x2="876" y2="206"/>
+            <text id="traceYTop" x="8" y="40" fill="#91a4bc" font-size="12"></text>
+            <text id="traceYBottom" x="8" y="211" fill="#91a4bc" font-size="12"></text>
+            <text x="74" y="235" fill="#91a4bc" font-size="12">first key</text>
+            <text x="820" y="235" fill="#91a4bc" font-size="12">196 keys</text>
+            <path class="traceFull" id="traceFull"/>
+            <path class="traceShown" id="traceShown"/>
+            <line class="traceCursor" id="traceCursor" x1="74" y1="25" x2="74" y2="210"/>
+            <circle class="traceDot" id="traceDot" cx="74" cy="210" r="7"/>
+          </svg>
+        </div>
+        <div class="traceControls">
+          <button class="btn" type="button" id="tracePlay">▶ Play stream</button>
+          <button class="btn" type="button" id="traceStep">Step one key</button>
+          <button class="btn" type="button" id="traceReset">↺ Restart</button>
+          <span class="fine">One Python reference-model trace · fixed seed 20261108 · not an FPGA waveform</span>
+        </div>
+        <div class="traceEquation">
+          <span class="eq mono">m′ = max(m, x)</span>
+          <span class="eq mono">l′ = αl + β</span>
+          <span class="eq mono">a′ = αa + βv</span>
+          <span class="eq mono">output = a / l</span>
+        </div>
+      </article>
+
       <article class="slide" data-title="Streaming evidence">
-        <div class="eyebrow">04 / Streaming evidence</div>
+        <div class="eyebrow">06 / Streaming evidence</div>
         <h2>The software checks support the streaming design claim</h2>
         <p class="subtitle">The design stores working state as it consumes keys. The checks below model expected behavior; they do not execute the SystemVerilog.</p>
         <div class="layout">
@@ -224,7 +353,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
       </article>
 
       <article class="slide" data-title="Next proof points">
-        <div class="eyebrow">05 / Next proof points</div>
+        <div class="eyebrow">07 / Next proof points</div>
         <h2>Next: replace “prepared” with hardware evidence</h2>
         <p class="subtitle">Click each stage to expand the proof artifact we need before claiming the FPGA demo works.</p>
         <div class="workflow">
@@ -248,7 +377,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modalInner"><button class="btn modalClose" id="modalClose">Close ×</button><div class="eyebrow">Acronym / detail</div><h2 id="modalTitle" style="font-size:29px;margin:12px 0"></h2><p id="modalText" class="subtitle" style="font-size:17px"></p></div></div>
 <div class="toast" id="toast" role="status">Use ← → or Space to navigate. Press N for speaker notes.</div>
 <script>
-const DATA = {"notes": ["This Sprint 2 update is about moving from an algorithm we can test in Python toward a small attention kernel for the PYNQ-Z2. The board is now secured. Today\u2019s passing results are still host-side: the SystemVerilog has not been simulated and no bitstream has run on the board. I\u2019ll cover what is implemented, what the numbers show, and the next validation steps.", "The first target is intentionally smaller than a full Vision Transformer. The demo accepts one 32-element query and 196 key/value pairs. For each key, it calculates a dot product and Q12 score, then updates a running maximum and weighted sum. A 64-entry fractional lookup and Q15 weights approximate the exponential. The result is 16 weighted value components. Keys are processed one at a time, so the design does not store a 196-by-196 score table. This is only the attention-normalization kernel; Q/K/V projections and image classification are not included.", "The repository now has four pieces for that path. First is an AXI-stream SystemVerilog module for the fixed-size operation; second, a Vivado Tcl recipe for the Zynq processing system and AXI DMA; third, a PYNQ runner that sends deterministic inputs and compares output with the Python reference; and fourth, a host verification harness and RTL testbench. They are implementation artifacts, not proof the hardware works. The board still needs to boot, the RTL needs to compile and simulate, and the overlay and DMA runner need an end-to-end board test.", "The local verification ran 132 synthetic input cases: four edge cases and 128 repeatable random seeds. It checks the Python integer-arithmetic mirror against the NumPy reference, and also compares against PyTorch. The largest absolute output differences were 0.03124 from Python and 0.03137 from PyTorch. The demo threshold is 0.20 dequantized value units, and every software case was below it. All 64 LUT constants matched Python; 65,536 exponential inputs matched and were monotonic. This supports consistency of the fixed-point model. Inputs are synthetic, and that threshold is a demo setting\u2014not an image-accuracy result.", "The report models 20 ready/valid schedules with randomized input gaps and output back-pressure, accounting for 188,800 input and 320 output words. Source inspection finds no N-by-N score buffer; the modeled state is the query, current key/value, recurrence state, and output accumulators. These checks use Python or source inspection, not SystemVerilog execution. There is no Vivado timing/resource report, power measurement, or board DMA result. The software mirror passes; FPGA behavior remains unverified.", "Now that the board is secured, the next steps are concrete. First, bring up the PYNQ image and verify serial and network access. Then run the HDL testbench in Vivado simulation, fix any issues, and build the overlay. Finally, run the same seeded test through DMA and compare actual board output with Python. The proof we need is a build log, passing simulation, and board comparison. Only then can we claim the kernel works in programmable logic. Next we can add projection MACs, real model inputs, and measure latency and power. This is a step toward the accelerator, not the finished system."], "metrics": {"caseCount": 132, "edgeCases": 4, "seeds": 128, "pythonError": 0.03123858033149235, "torchError": 0.03137490611921102, "tolerance": 0.2, "lutEntries": 64, "expDeltas": 65536, "maxExpError": 0.010684696248608794, "protocolTrials": 20, "inputWords": 188800, "outputWords": 320}};
+const DATA = {"notes": ["This Sprint 2 update is about moving from an algorithm we can test in Python toward a small attention kernel for the PYNQ-Z2. The board is now secured. Today\u2019s passing results are still host-side: the SystemVerilog has not been simulated and no bitstream has run on the board. I\u2019ll cover what is implemented, what the numbers show, and the next validation steps.", "The first target is intentionally smaller than a full Vision Transformer. The demo accepts one 32-element query and 196 key/value pairs. For each key, it calculates a dot product and Q12 score, then updates a running maximum and weighted sum. A 64-entry fractional lookup and Q15 weights approximate the exponential. The result is 16 weighted value components. Keys are processed one at a time, so the design does not store a 196-by-196 score table. This is only the attention-normalization kernel; Q/K/V projections and image classification are not included.", "The repository now has four pieces for that path. First is an AXI-stream SystemVerilog module for the fixed-size operation; second, a Vivado Tcl recipe for the Zynq processing system and AXI DMA; third, a PYNQ runner that sends deterministic inputs and compares output with the Python reference; and fourth, a host verification harness and RTL testbench. They are implementation artifacts, not proof the hardware works. The board still needs to boot, the RTL needs to compile and simulate, and the overlay and DMA runner need an end-to-end board test.", "This is the proposed PYNQ-Z2 data path, not a photograph of a working board. Python on the ARM processor prepares signed Q4 query, key, and value words in DDR and configures the AXI DMA. The DMA streams those words into the programmable-logic attention core. The core returns 16 output values through the receive side of DMA; Python reads them back and compares against its NumPy reference.", "The local verification ran 132 synthetic input cases: four edge cases and 128 repeatable random seeds. It checks the Python integer-arithmetic mirror against the NumPy reference, and also compares against PyTorch. The largest absolute output differences were 0.03124 from Python and 0.03137 from PyTorch. The demo threshold is 0.20 dequantized value units, and every software case was below it. All 64 LUT constants matched Python; 65,536 exponential inputs matched and were monotonic. This supports consistency of the fixed-point model. Inputs are synthetic, and that threshold is a demo setting\u2014not an image-accuracy result.", "This animation replays one fixed-seed synthetic input through the same NumPy online recurrence used as the reference. Each point is one key/value row: the running maximum and denominator update, and the first normalized output component settles as more rows arrive. The chart is a software-model trace, not an RTL waveform or board result. The important architectural point is that the core carries m, l, and the value accumulator forward instead of storing a 196 by 196 score table.", "The report models 20 ready/valid schedules with randomized input gaps and output back-pressure, accounting for 188,800 input and 320 output words. Source inspection finds no N-by-N score buffer; the modeled state is the query, current key/value, recurrence state, and output accumulators. These checks use Python or source inspection, not SystemVerilog execution. There is no Vivado timing/resource report, power measurement, or board DMA result. The software mirror passes; FPGA behavior remains unverified.", "Now that the board is secured, the next steps are concrete. First, bring up the PYNQ image and verify serial and network access. Then run the HDL testbench in Vivado simulation, fix any issues, and build the overlay. Finally, run the same seeded test through DMA and compare actual board output with Python. The proof we need is a build log, passing simulation, and board comparison. Only then can we claim the kernel works in programmable logic. Next we can add projection MACs, real model inputs, and measure latency and power. This is a step toward the accelerator, not the finished system."], "trace": [{"token": 1, "scoreQ12": 82, "maxQ12": 82, "denominatorQ15": 32768, "output0": 0.5625}, {"token": 2, "scoreQ12": -232, "maxQ12": 82, "denominatorQ15": 63143, "output0": 0.2017117891135993}, {"token": 3, "scoreQ12": -2599, "maxQ12": 82, "denominatorQ15": 80252, "output0": 0.3718996099785675}, {"token": 4, "scoreQ12": 628, "maxQ12": 628, "denominatorQ15": 103238, "output0": -0.043705999644534865}, {"token": 5, "scoreQ12": 303, "maxQ12": 628, "denominatorQ15": 133613, "output0": -0.062187025149517565}, {"token": 6, "scoreQ12": -37, "maxQ12": 628, "denominatorQ15": 161771, "output0": -0.04048389384563667}, {"token": 7, "scoreQ12": 407, "maxQ12": 628, "denominatorQ15": 193149, "output0": 0.05747378971000373}, {"token": 8, "scoreQ12": 1100, "maxQ12": 1100, "denominatorQ15": 206088, "output0": 0.15764801084559696}, {"token": 9, "scoreQ12": -1188, "maxQ12": 1100, "denominatorQ15": 224949, "output0": 0.12346848956495644}, {"token": 10, "scoreQ12": -891, "maxQ12": 1100, "denominatorQ15": 245295, "output0": 0.13396364890905801}, {"token": 11, "scoreQ12": -1366, "maxQ12": 1100, "denominatorQ15": 263356, "output0": 0.12477639871180982}, {"token": 12, "scoreQ12": -2390, "maxQ12": 1100, "denominatorQ15": 277435, "output0": 0.10258592376285396}, {"token": 13, "scoreQ12": 1001, "maxQ12": 1100, "denominatorQ15": 309501, "output0": 0.09195745977928145}, {"token": 14, "scoreQ12": 713, "maxQ12": 1100, "denominatorQ15": 339549, "output0": 0.1999679744577289}, {"token": 15, "scoreQ12": 874, "maxQ12": 1100, "denominatorQ15": 370589, "output0": 0.14657457657714446}, {"token": 16, "scoreQ12": 455, "maxQ12": 1100, "denominatorQ15": 398747, "output0": 0.14063754902017417}, {"token": 17, "scoreQ12": -518, "maxQ12": 1100, "denominatorQ15": 420935, "output0": 0.14969662954885526}, {"token": 18, "scoreQ12": -1759, "maxQ12": 1100, "denominatorQ15": 437319, "output0": 0.19091910198081352}, {"token": 19, "scoreQ12": -585, "maxQ12": 1100, "denominatorQ15": 459268, "output0": 0.19075569876226384}, {"token": 20, "scoreQ12": -1790, "maxQ12": 1100, "denominatorQ15": 475475, "output0": 0.18212324677248518}, {"token": 21, "scoreQ12": 597, "maxQ12": 1100, "denominatorQ15": 504563, "output0": 0.19324256982606214}, {"token": 22, "scoreQ12": 356, "maxQ12": 1100, "denominatorQ15": 532117, "output0": 0.21883613145069108}, {"token": 23, "scoreQ12": 1157, "maxQ12": 1157, "denominatorQ15": 559152, "output0": 0.2060119301317751}, {"token": 24, "scoreQ12": 1491, "maxQ12": 1491, "denominatorQ15": 551085, "output0": 0.1900463224725521}, {"token": 25, "scoreQ12": -91, "maxQ12": 1491, "denominatorQ15": 573514, "output0": 0.19483524398669672}, {"token": 26, "scoreQ12": 407, "maxQ12": 1491, "denominatorQ15": 598781, "output0": 0.15760299277997528}, {"token": 27, "scoreQ12": 1386, "maxQ12": 1491, "denominatorQ15": 630847, "output0": 0.13688450229578072}, {"token": 28, "scoreQ12": 803, "maxQ12": 1491, "denominatorQ15": 658701, "output0": 0.139024842257392}, {"token": 29, "scoreQ12": -1038, "maxQ12": 1491, "denominatorQ15": 676375, "output0": 0.11089473682467031}, {"token": 30, "scoreQ12": -410, "maxQ12": 1491, "denominatorQ15": 697167, "output0": 0.08335582094359942}, {"token": 31, "scoreQ12": 679, "maxQ12": 1491, "denominatorQ15": 724131, "output0": 0.08257922616182208}, {"token": 32, "scoreQ12": 973, "maxQ12": 1491, "denominatorQ15": 753219, "output0": 0.09145836419392817}, {"token": 33, "scoreQ12": -173, "maxQ12": 1491, "denominatorQ15": 775168, "output0": 0.12603234411093645}, {"token": 34, "scoreQ12": -6, "maxQ12": 1491, "denominatorQ15": 798089, "output0": 0.10805278624287064}, {"token": 35, "scoreQ12": -416, "maxQ12": 1491, "denominatorQ15": 818881, "output0": 0.11483077531385681}, {"token": 36, "scoreQ12": 407, "maxQ12": 1491, "denominatorQ15": 844148, "output0": 0.11700590728140844}, {"token": 37, "scoreQ12": -834, "maxQ12": 1491, "denominatorQ15": 862806, "output0": 0.11312412943325195}, {"token": 38, "scoreQ12": -1937, "maxQ12": 1491, "denominatorQ15": 877038, "output0": 0.09810370544923525}, {"token": 39, "scoreQ12": 979, "maxQ12": 1491, "denominatorQ15": 906126, "output0": 0.11501786464551991}, {"token": 40, "scoreQ12": -1058, "maxQ12": 1491, "denominatorQ15": 923800, "output0": 0.1223832838490868}, {"token": 41, "scoreQ12": 195, "maxQ12": 1491, "denominatorQ15": 947735, "output0": 0.11297876264967145}, {"token": 42, "scoreQ12": -407, "maxQ12": 1491, "denominatorQ15": 968527, "output0": 0.1025030046862776}, {"token": 43, "scoreQ12": 860, "maxQ12": 1491, "denominatorQ15": 996685, "output0": 0.09254421168151059}, {"token": 44, "scoreQ12": -110, "maxQ12": 1491, "denominatorQ15": 1018873, "output0": 0.08780675081171685}, {"token": 45, "scoreQ12": 1570, "maxQ12": 1570, "denominatorQ15": 1040664, "output0": 0.08897795937248497}, {"token": 46, "scoreQ12": 673, "maxQ12": 1570, "denominatorQ15": 1067050, "output0": 0.0929597105219134}, {"token": 47, "scoreQ12": -651, "maxQ12": 1570, "denominatorQ15": 1086116, "output0": 0.08584215140225142}, {"token": 48, "scoreQ12": -1541, "maxQ12": 1570, "denominatorQ15": 1101469, "output0": 0.0950996206996363}, {"token": 49, "scoreQ12": -645, "maxQ12": 1570, "denominatorQ15": 1120743, "output0": 0.09238929809278995}, {"token": 50, "scoreQ12": -939, "maxQ12": 1570, "denominatorQ15": 1138610, "output0": 0.09584326205848157}, {"token": 51, "scoreQ12": 150, "maxQ12": 1570, "denominatorQ15": 1161780, "output0": 0.07523474462670014}, {"token": 52, "scoreQ12": 1377, "maxQ12": 1570, "denominatorQ15": 1193158, "output0": 0.07818712744867629}, {"token": 53, "scoreQ12": -1629, "maxQ12": 1570, "denominatorQ15": 1208182, "output0": 0.07799205468415164}, {"token": 54, "scoreQ12": 1117, "maxQ12": 1570, "denominatorQ15": 1237586, "output0": 0.0746540819081726}, {"token": 55, "scoreQ12": -71, "maxQ12": 1570, "denominatorQ15": 1259774, "output0": 0.07994397932677424}, {"token": 56, "scoreQ12": -215, "maxQ12": 1570, "denominatorQ15": 1281021, "output0": 0.07861802937844711}, {"token": 57, "scoreQ12": -693, "maxQ12": 1570, "denominatorQ15": 1299882, "output0": 0.07747729917977762}, {"token": 58, "scoreQ12": 854, "maxQ12": 1570, "denominatorQ15": 1327436, "output0": 0.07067975150019111}, {"token": 59, "scoreQ12": -238, "maxQ12": 1570, "denominatorQ15": 1348683, "output0": 0.07252012453067748}, {"token": 60, "scoreQ12": -1027, "maxQ12": 1570, "denominatorQ15": 1366167, "output0": 0.0707921572636491}, {"token": 61, "scoreQ12": -427, "maxQ12": 1570, "denominatorQ15": 1386294, "output0": 0.07974587036545473}, {"token": 62, "scoreQ12": 88, "maxQ12": 1570, "denominatorQ15": 1409215, "output0": 0.07234939069794723}, {"token": 63, "scoreQ12": 402, "maxQ12": 1570, "denominatorQ15": 1433941, "output0": 0.07433497724969695}, {"token": 64, "scoreQ12": 1640, "maxQ12": 1640, "denominatorQ15": 1451261, "output0": 0.0811237177451412}, {"token": 65, "scoreQ12": 1295, "maxQ12": 1640, "denominatorQ15": 1481636, "output0": 0.07177273145261816}, {"token": 66, "scoreQ12": 76, "maxQ12": 1640, "denominatorQ15": 1504065, "output0": 0.07536251773595647}, {"token": 67, "scoreQ12": -1194, "maxQ12": 1640, "denominatorQ15": 1520627, "output0": 0.0779453148198285}, {"token": 68, "scoreQ12": -628, "maxQ12": 1640, "denominatorQ15": 1539488, "output0": 0.07852180415731162}, {"token": 69, "scoreQ12": 846, "maxQ12": 1640, "denominatorQ15": 1566745, "output0": 0.08367969914602016}, {"token": 70, "scoreQ12": 699, "maxQ12": 1640, "denominatorQ15": 1592847, "output0": 0.09664707296967716}, {"token": 71, "scoreQ12": -733, "maxQ12": 1640, "denominatorQ15": 1611304, "output0": 0.0926763355881518}, {"token": 72, "scoreQ12": 1530, "maxQ12": 1640, "denominatorQ15": 1643370, "output0": 0.07501422396571153}, {"token": 73, "scoreQ12": -314, "maxQ12": 1640, "denominatorQ15": 1663716, "output0": 0.07180387171760767}, {"token": 74, "scoreQ12": 1649, "maxQ12": 1649, "denominatorQ15": 1696484, "output0": 0.07162416517841097}, {"token": 75, "scoreQ12": -272, "maxQ12": 1649, "denominatorQ15": 1717052, "output0": 0.07151486981089178}, {"token": 76, "scoreQ12": -1561, "maxQ12": 1649, "denominatorQ15": 1732076, "output0": 0.0806527832719415}, {"token": 77, "scoreQ12": -484, "maxQ12": 1649, "denominatorQ15": 1751560, "output0": 0.07488895626671731}, {"token": 78, "scoreQ12": 365, "maxQ12": 1649, "denominatorQ15": 1775756, "output0": 0.07812658396679012}, {"token": 79, "scoreQ12": -1007, "maxQ12": 1649, "denominatorQ15": 1793051, "output0": 0.08099009745876239}, {"token": 80, "scoreQ12": 713, "maxQ12": 1649, "denominatorQ15": 1819153, "output0": 0.07624090730055766}, {"token": 81, "scoreQ12": 1946, "maxQ12": 1946, "denominatorQ15": 1737446, "output0": 0.07244556183023843}, {"token": 82, "scoreQ12": -424, "maxQ12": 1946, "denominatorQ15": 1755903, "output0": 0.07037013241602778}, {"token": 83, "scoreQ12": 931, "maxQ12": 1946, "denominatorQ15": 1781724, "output0": 0.06935031835441428}, {"token": 84, "scoreQ12": -410, "maxQ12": 1946, "denominatorQ15": 1800181, "output0": 0.07889213730158269}, {"token": 85, "scoreQ12": -501, "maxQ12": 1946, "denominatorQ15": 1818242, "output0": 0.0793501369013038}, {"token": 86, "scoreQ12": 475, "maxQ12": 1946, "denominatorQ15": 1841163, "output0": 0.08303074014614699}, {"token": 87, "scoreQ12": -139, "maxQ12": 1946, "denominatorQ15": 1860859, "output0": 0.07752125583921213}, {"token": 88, "scoreQ12": 1909, "maxQ12": 1946, "denominatorQ15": 1893627, "output0": 0.07617980025617528}, {"token": 89, "scoreQ12": -365, "maxQ12": 1946, "denominatorQ15": 1912285, "output0": 0.06811883512117725}, {"token": 90, "scoreQ12": 141, "maxQ12": 1946, "denominatorQ15": 1933532, "output0": 0.0673702977864863}, {"token": 91, "scoreQ12": -744, "maxQ12": 1946, "denominatorQ15": 1950641, "output0": 0.06842395095750599}, {"token": 92, "scoreQ12": 1655, "maxQ12": 1946, "denominatorQ15": 1981347, "output0": 0.07123793263860416}, {"token": 93, "scoreQ12": 690, "maxQ12": 1946, "denominatorQ15": 2005543, "output0": 0.07188654849070822}, {"token": 94, "scoreQ12": -543, "maxQ12": 1946, "denominatorQ15": 2023410, "output0": 0.0657329404913984}, {"token": 95, "scoreQ12": 25, "maxQ12": 1946, "denominatorQ15": 2043978, "output0": 0.06192688430095648}, {"token": 96, "scoreQ12": -1966, "maxQ12": 1946, "denominatorQ15": 2056611, "output0": 0.06116257601447256}, {"token": 97, "scoreQ12": -164, "maxQ12": 1946, "denominatorQ15": 2076307, "output0": 0.06117526291617782}, {"token": 98, "scoreQ12": -1550, "maxQ12": 1946, "denominatorQ15": 2090386, "output0": 0.06455174504598693}, {"token": 99, "scoreQ12": 1884, "maxQ12": 1946, "denominatorQ15": 2122801, "output0": 0.06261167514981406}, {"token": 100, "scoreQ12": 806, "maxQ12": 1946, "denominatorQ15": 2147796, "output0": 0.061155686629316953}, {"token": 101, "scoreQ12": 1160, "maxQ12": 1946, "denominatorQ15": 2175053, "output0": 0.04942411247896048}, {"token": 102, "scoreQ12": 486, "maxQ12": 1946, "denominatorQ15": 2198223, "output0": 0.042974229238662516}, {"token": 103, "scoreQ12": -450, "maxQ12": 1946, "denominatorQ15": 2216481, "output0": 0.041075725043300815}, {"token": 104, "scoreQ12": 147, "maxQ12": 1946, "denominatorQ15": 2237728, "output0": 0.041872577507051985}, {"token": 105, "scoreQ12": 65, "maxQ12": 1946, "denominatorQ15": 2258520, "output0": 0.03688408299226947}, {"token": 106, "scoreQ12": -1287, "maxQ12": 1946, "denominatorQ15": 2273544, "output0": 0.03746636929819719}, {"token": 107, "scoreQ12": -693, "maxQ12": 1946, "denominatorQ15": 2290839, "output0": 0.040486477495668804}, {"token": 108, "scoreQ12": -311, "maxQ12": 1946, "denominatorQ15": 2309905, "output0": 0.043763434695236574}, {"token": 109, "scoreQ12": -761, "maxQ12": 1946, "denominatorQ15": 2326830, "output0": 0.04162664510071661}, {"token": 110, "scoreQ12": -99, "maxQ12": 1946, "denominatorQ15": 2346740, "output0": 0.038091938868259984}, {"token": 111, "scoreQ12": -1624, "maxQ12": 1946, "denominatorQ15": 2360517, "output0": 0.04115261153370233}, {"token": 112, "scoreQ12": 272, "maxQ12": 1946, "denominatorQ15": 2382466, "output0": 0.03962189350013827}, {"token": 113, "scoreQ12": -481, "maxQ12": 1946, "denominatorQ15": 2400724, "output0": 0.043123163728816985}, {"token": 114, "scoreQ12": -195, "maxQ12": 1946, "denominatorQ15": 2420208, "output0": 0.04529179480428973}, {"token": 115, "scoreQ12": 1312, "maxQ12": 1946, "denominatorQ15": 2448366, "output0": 0.04405211031345004}, {"token": 116, "scoreQ12": -1109, "maxQ12": 1946, "denominatorQ15": 2464055, "output0": 0.043771624058594645}, {"token": 117, "scoreQ12": 17, "maxQ12": 1946, "denominatorQ15": 2484623, "output0": 0.04082236585578594}, {"token": 118, "scoreQ12": -897, "maxQ12": 1946, "denominatorQ15": 2501007, "output0": 0.042602115515750424}, {"token": 119, "scoreQ12": -441, "maxQ12": 1946, "denominatorQ15": 2519464, "output0": 0.0432057430150621}, {"token": 120, "scoreQ12": 868, "maxQ12": 1946, "denominatorQ15": 2544731, "output0": 0.04339731846694225}, {"token": 121, "scoreQ12": -1748, "maxQ12": 1946, "denominatorQ15": 2558067, "output0": 0.041216082932816235}, {"token": 122, "scoreQ12": 800, "maxQ12": 1946, "denominatorQ15": 2583062, "output0": 0.028721630227884747}, {"token": 123, "scoreQ12": -1049, "maxQ12": 1946, "denominatorQ15": 2598922, "output0": 0.030834804438032548}, {"token": 124, "scoreQ12": -636, "maxQ12": 1946, "denominatorQ15": 2616406, "output0": 0.027705180931285295}, {"token": 125, "scoreQ12": -1078, "maxQ12": 1946, "denominatorQ15": 2632095, "output0": 0.026049877234560467}, {"token": 126, "scoreQ12": -354, "maxQ12": 1946, "denominatorQ15": 2650956, "output0": 0.02719856124345347}, {"token": 127, "scoreQ12": 328, "maxQ12": 1946, "denominatorQ15": 2673144, "output0": 0.022303863585239114}, {"token": 128, "scoreQ12": -441, "maxQ12": 1946, "denominatorQ15": 2691601, "output0": 0.023436655960411827}, {"token": 129, "scoreQ12": 390, "maxQ12": 1946, "denominatorQ15": 2714030, "output0": 0.025308996812747255}, {"token": 130, "scoreQ12": 150, "maxQ12": 1946, "denominatorQ15": 2735277, "output0": 0.020743032285103276}, {"token": 131, "scoreQ12": -133, "maxQ12": 1946, "denominatorQ15": 2755187, "output0": 0.023754672230850548}, {"token": 132, "scoreQ12": 1027, "maxQ12": 1946, "denominatorQ15": 2781573, "output0": 0.017600585754787103}, {"token": 133, "scoreQ12": 1196, "maxQ12": 1946, "denominatorQ15": 2809127, "output0": 0.018654038824054742}, {"token": 134, "scoreQ12": -37, "maxQ12": 1946, "denominatorQ15": 2829473, "output0": 0.016272796778658227}, {"token": 135, "scoreQ12": 622, "maxQ12": 1946, "denominatorQ15": 2853408, "output0": 0.0229517218076421}, {"token": 136, "scoreQ12": -885, "maxQ12": 1946, "denominatorQ15": 2869970, "output0": 0.02317994669620255}, {"token": 137, "scoreQ12": -153, "maxQ12": 1946, "denominatorQ15": 2889666, "output0": 0.023447952676780095}, {"token": 138, "scoreQ12": -450, "maxQ12": 1946, "denominatorQ15": 2907924, "output0": 0.022908310746670282}, {"token": 139, "scoreQ12": 1782, "maxQ12": 1946, "denominatorQ15": 2939644, "output0": 0.025358725961273008}, {"token": 140, "scoreQ12": -133, "maxQ12": 1946, "denominatorQ15": 2959554, "output0": 0.031074572932171682}, {"token": 141, "scoreQ12": -3, "maxQ12": 1946, "denominatorQ15": 2980122, "output0": 0.03172282095152495}, {"token": 142, "scoreQ12": 2339, "maxQ12": 2339, "denominatorQ15": 2765516, "output0": 0.029125304023952202}, {"token": 143, "scoreQ12": 656, "maxQ12": 2339, "denominatorQ15": 2787465, "output0": 0.027911693701303586}, {"token": 144, "scoreQ12": -455, "maxQ12": 2339, "denominatorQ15": 2804208, "output0": 0.022893872987704265}, {"token": 145, "scoreQ12": -730, "maxQ12": 2339, "denominatorQ15": 2819728, "output0": 0.025175897030885318}, {"token": 146, "scoreQ12": -76, "maxQ12": 2339, "denominatorQ15": 2837986, "output0": 0.02581810896287163}, {"token": 147, "scoreQ12": -583, "maxQ12": 2339, "denominatorQ15": 2854193, "output0": 0.028510661957023998}, {"token": 148, "scoreQ12": 153, "maxQ12": 2339, "denominatorQ15": 2873467, "output0": 0.036284671716468014}, {"token": 149, "scoreQ12": -1208, "maxQ12": 2339, "denominatorQ15": 2887394, "output0": 0.03158773769118596}, {"token": 150, "scoreQ12": 204, "maxQ12": 2339, "denominatorQ15": 2906878, "output0": 0.03137601381382507}, {"token": 151, "scoreQ12": -71, "maxQ12": 2339, "denominatorQ15": 2925136, "output0": 0.030790062165692193}, {"token": 152, "scoreQ12": -840, "maxQ12": 2339, "denominatorQ15": 2940323, "output0": 0.030308211643110025}, {"token": 153, "scoreQ12": -320, "maxQ12": 2339, "denominatorQ15": 2957618, "output0": 0.033054786582683834}, {"token": 154, "scoreQ12": -792, "maxQ12": 2339, "denominatorQ15": 2972971, "output0": 0.035143420263132136}, {"token": 155, "scoreQ12": -450, "maxQ12": 2339, "denominatorQ15": 2989714, "output0": 0.033896572308623564}, {"token": 156, "scoreQ12": -8, "maxQ12": 2339, "denominatorQ15": 3008372, "output0": 0.03136058532093245}, {"token": 157, "scoreQ12": -387, "maxQ12": 2339, "denominatorQ15": 3025297, "output0": 0.02838789275337403}, {"token": 158, "scoreQ12": 1383, "maxQ12": 2339, "denominatorQ15": 3051399, "output0": 0.02172947778481418}, {"token": 159, "scoreQ12": -815, "maxQ12": 2339, "denominatorQ15": 3066586, "output0": 0.024407596683446737}, {"token": 160, "scoreQ12": 1013, "maxQ12": 2339, "denominatorQ15": 3090521, "output0": 0.027606852301959507}, {"token": 161, "scoreQ12": 229, "maxQ12": 2339, "denominatorQ15": 3110217, "output0": 0.02941098861690493}, {"token": 162, "scoreQ12": 240, "maxQ12": 2339, "denominatorQ15": 3129913, "output0": 0.031192418697613702}, {"token": 163, "scoreQ12": 619, "maxQ12": 2339, "denominatorQ15": 3151625, "output0": 0.03269981574048442}, {"token": 164, "scoreQ12": -566, "maxQ12": 2339, "denominatorQ15": 3167832, "output0": 0.03285227697778929}, {"token": 165, "scoreQ12": -979, "maxQ12": 2339, "denominatorQ15": 3182534, "output0": 0.03472158326764276}, {"token": 166, "scoreQ12": 51, "maxQ12": 2339, "denominatorQ15": 3201395, "output0": 0.03672633157829765}, {"token": 167, "scoreQ12": -846, "maxQ12": 2339, "denominatorQ15": 3216582, "output0": 0.03773329710951072}, {"token": 168, "scoreQ12": 1038, "maxQ12": 2339, "denominatorQ15": 3240517, "output0": 0.040224405328873204}, {"token": 169, "scoreQ12": -1211, "maxQ12": 2339, "denominatorQ15": 3254294, "output0": 0.04005411597203701}, {"token": 170, "scoreQ12": -2144, "maxQ12": 2339, "denominatorQ15": 3265268, "output0": 0.041179811054744726}, {"token": 171, "scoreQ12": -1304, "maxQ12": 2339, "denominatorQ15": 3278750, "output0": 0.04023949501581523}, {"token": 172, "scoreQ12": -1182, "maxQ12": 2339, "denominatorQ15": 3292677, "output0": 0.03927622775726383}, {"token": 173, "scoreQ12": 2857, "maxQ12": 2857, "denominatorQ15": 2955661, "output0": 0.034683357813339}, {"token": 174, "scoreQ12": 1137, "maxQ12": 2857, "denominatorQ15": 2977373, "output0": 0.03397466425534569}, {"token": 175, "scoreQ12": -303, "maxQ12": 2857, "denominatorQ15": 2992560, "output0": 0.03158196846109397}, {"token": 176, "scoreQ12": 718, "maxQ12": 2857, "denominatorQ15": 3012044, "output0": 0.029760500025209247}, {"token": 177, "scoreQ12": -758, "maxQ12": 2857, "denominatorQ15": 3025672, "output0": 0.034975101576751}, {"token": 178, "scoreQ12": -1587, "maxQ12": 2857, "denominatorQ15": 3036766, "output0": 0.030280793955784334}, {"token": 179, "scoreQ12": -1188, "maxQ12": 2857, "denominatorQ15": 3048996, "output0": 0.03141281934706748}, {"token": 180, "scoreQ12": 1100, "maxQ12": 2857, "denominatorQ15": 3070475, "output0": 0.03119307616506611}, {"token": 181, "scoreQ12": -102, "maxQ12": 2857, "denominatorQ15": 3086508, "output0": 0.031031042374726182}, {"token": 182, "scoreQ12": -1058, "maxQ12": 2857, "denominatorQ15": 3099141, "output0": 0.03090455082164102}, {"token": 183, "scoreQ12": 1855, "maxQ12": 2857, "denominatorQ15": 3124962, "output0": 0.03426417602451849}, {"token": 184, "scoreQ12": 359, "maxQ12": 2857, "denominatorQ15": 3142829, "output0": 0.03549063536003116}, {"token": 185, "scoreQ12": 1706, "maxQ12": 2857, "denominatorQ15": 3167824, "output0": 0.02781347244604857}, {"token": 186, "scoreQ12": -141, "maxQ12": 2857, "denominatorQ15": 3183684, "output0": 0.026740856045364855}, {"token": 187, "scoreQ12": 506, "maxQ12": 2857, "denominatorQ15": 3202342, "output0": 0.026949201721093927}, {"token": 188, "scoreQ12": -820, "maxQ12": 2857, "denominatorQ15": 3215824, "output0": 0.028146343064151324}, {"token": 189, "scoreQ12": 574, "maxQ12": 2857, "denominatorQ15": 3234685, "output0": 0.024337937245181945}, {"token": 190, "scoreQ12": -696, "maxQ12": 2857, "denominatorQ15": 3248462, "output0": 0.027945666453211202}, {"token": 191, "scoreQ12": -192, "maxQ12": 2857, "denominatorQ15": 3264151, "output0": 0.02570852207447859}, {"token": 192, "scoreQ12": 936, "maxQ12": 2857, "denominatorQ15": 3284719, "output0": 0.021633965656706514}, {"token": 193, "scoreQ12": 1901, "maxQ12": 2857, "denominatorQ15": 3310821, "output0": 0.021956147142334594}, {"token": 194, "scoreQ12": -1833, "maxQ12": 2857, "denominatorQ15": 3321330, "output0": 0.022282187568814713}, {"token": 195, "scoreQ12": -758, "maxQ12": 2857, "denominatorQ15": 3334958, "output0": 0.025766740701961274}, {"token": 196, "scoreQ12": -653, "maxQ12": 2857, "denominatorQ15": 3348885, "output0": 0.025139747419792368}], "metrics": {"caseCount": 132, "edgeCases": 4, "seeds": 128, "pythonError": 0.03123858033149235, "torchError": 0.03137490611921102, "tolerance": 0.2, "lutEntries": 64, "expDeltas": 65536, "maxExpError": 0.010684696248608794, "protocolTrials": 20, "inputWords": 188800, "outputWords": 320}};
 const slides = [...document.querySelectorAll(".slide")];
 let current = 0, paused = false, toastTimer;
 const $ = id => document.getElementById(id);
@@ -258,10 +387,13 @@ function showSlide(index) {
   $("counter").textContent = `${current+1} / ${slides.length}`;
   $("progressBar").style.width = `${100*(current+1)/slides.length}%`;
   $("notes").innerHTML = `<span class="label">Speaker notes · slide ${current+1}</span><p style="margin-top:12px">${DATA.notes[current]}</p>`;
-  if(current===1) startTokenAnimation();
-  if(current===2) animateMeters();
-  if(current===3) replayMetrics();
-  if(current===4) animateMeters();
+  const title = slides[current].dataset.title;
+  if(title==="Attention flow") startTokenAnimation();
+  if(title==="Implementation progress" || title==="Streaming evidence") animateMeters();
+  if(title==="System diagram") syncSystemMotion();
+  if(title==="Numerical evidence") replayMetrics();
+  if(title==="Streaming progress trace") startTraceAnimation(true);
+  else stopTraceAnimation();
 }
 function next(){showSlide(current+1)} function prev(){showSlide(current-1)}
 $("next").addEventListener("click",next); $("prev").addEventListener("click",prev);
@@ -275,7 +407,8 @@ document.addEventListener("keydown",e=>{
 });
 $("notesBtn").addEventListener("click",()=>$("notes").classList.toggle("show"));
 $("fullBtn").addEventListener("click",async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{showToast("Fullscreen is unavailable in this browser.")}});
-function toggleMotion(){paused=!paused;$("app").classList.toggle("pause",paused);$("pauseBtn").textContent=paused?"Resume motion":"Pause motion"}
+function syncSystemMotion(){const svg=$("systemDiagram");if(!svg)return;if(paused)svg.pauseAnimations();else svg.unpauseAnimations()}
+function toggleMotion(){paused=!paused;$("app").classList.toggle("pause",paused);$("pauseBtn").textContent=paused?"Resume motion":"Pause motion";syncSystemMotion()}
 $("pauseBtn").addEventListener("click",toggleMotion);
 function showToast(text){$("toast").textContent=text;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),2600)}
 function animateMeters(){document.querySelectorAll(".slide.active [data-meter]").forEach(el=>{el.style.width="0";requestAnimationFrame(()=>el.style.width=el.dataset.meter+"%")})}
@@ -309,9 +442,54 @@ function replayMetrics(){
  let c=0;const caseTimer=setInterval(()=>{if(paused)return;if(c>=m.caseCount){clearInterval(caseTimer);return}
    const cell=document.createElement("i");cell.className="caseCell";cell.style.animationDelay=`${(c%16)*12}ms`;grid.appendChild(cell);c++;$("caseCount").textContent=c;
  },8);
- setTimeout(()=>{if(current!==3)return;$("pythonMetric").textContent=m.pythonError.toFixed(5);$("torchMetric").textContent=m.torchError.toFixed(5);$("pythonBar").style.width=`${Math.min(100,100*m.pythonError/m.tolerance)}%`;$("torchBar").style.width=`${Math.min(100,100*m.torchError/m.tolerance)}%`},850);
+ setTimeout(()=>{if(slides[current].dataset.title!=="Numerical evidence")return;$("pythonMetric").textContent=m.pythonError.toFixed(5);$("torchMetric").textContent=m.torchError.toFixed(5);$("pythonBar").style.width=`${Math.min(100,100*m.pythonError/m.tolerance)}%`;$("torchBar").style.width=`${Math.min(100,100*m.torchError/m.tolerance)}%`},850);
 }
 $("replay").addEventListener("click",replayMetrics);
+let traceIndex=0, traceTimer, traceRun=0;
+const traceValues=DATA.trace.map(point=>point.output0);
+const traceLow=Math.min(...traceValues), traceHigh=Math.max(...traceValues);
+const tracePad=(traceHigh-traceLow)*.12||.1;
+const traceY=value=>206-(value-(traceLow-tracePad))/(traceHigh-traceLow+2*tracePad)*171;
+const traceX=index=>74+index/(DATA.trace.length-1)*802;
+const tracePath=DATA.trace.map((point,index)=>`${index?"L":"M"}${traceX(index).toFixed(2)} ${traceY(point.output0).toFixed(2)}`).join(" ");
+$("traceFull").setAttribute("d",tracePath);
+$("traceYTop").textContent=(traceHigh+tracePad).toFixed(2);
+$("traceYBottom").textContent=(traceLow-tracePad).toFixed(2);
+function renderTrace(index){
+ traceIndex=Math.max(0,Math.min(DATA.trace.length-1,index));
+ const point=DATA.trace[traceIndex], x=traceX(traceIndex), y=traceY(point.output0);
+ $("traceShown").setAttribute("d",DATA.trace.slice(0,traceIndex+1).map((item,i)=>`${i?"L":"M"}${traceX(i).toFixed(2)} ${traceY(item.output0).toFixed(2)}`).join(" "));
+ $("traceCursor").setAttribute("x1",x);$("traceCursor").setAttribute("x2",x);
+ $("traceDot").setAttribute("cx",x);$("traceDot").setAttribute("cy",y);
+ $("traceToken").textContent=`${point.token} / ${DATA.trace.length}`;
+ $("traceScore").textContent=point.scoreQ12.toLocaleString();
+ $("traceMax").textContent=point.maxQ12.toLocaleString();
+ $("traceDenom").textContent=point.denominatorQ15.toLocaleString();
+ $("traceOutput").textContent=point.output0.toFixed(4);
+}
+function startTraceAnimation(reset){
+ stopTraceAnimation();
+ if(reset)renderTrace(0);
+ $("tracePlay").textContent="Ⅱ Pause stream";
+ const run=traceRun;
+ traceTimer=setInterval(()=>{
+   if(run!==traceRun)return;
+   if(paused||slides[current].dataset.title!=="Streaming progress trace")return;
+   if(traceIndex>=DATA.trace.length-1){clearInterval(traceTimer);traceTimer=null;$("tracePlay").textContent="▶ Play stream";return}
+   renderTrace(traceIndex+1);
+ },65);
+}
+function stopTraceAnimation(){clearInterval(traceTimer);traceTimer=null;traceRun++}
+$("tracePlay").addEventListener("click",()=>{
+ if(traceTimer){stopTraceAnimation();$("tracePlay").textContent="▶ Play stream"}
+ else {if(traceIndex>=DATA.trace.length-1)traceIndex=0;startTraceAnimation(false)}
+});
+$("traceStep").addEventListener("click",()=>{
+ stopTraceAnimation();$("tracePlay").textContent="▶ Play stream";
+ renderTrace(traceIndex>=DATA.trace.length-1?0:traceIndex+1);
+});
+$("traceReset").addEventListener("click",()=>startTraceAnimation(true));
+renderTrace(0);
 $("trialCount").textContent=DATA.metrics.protocolTrials;
 $("wordCount").textContent=`${DATA.metrics.inputWords.toLocaleString()} input words and ${DATA.metrics.outputWords.toLocaleString()} output words accounted for across the randomized schedule tests.`;
 showSlide(0);
