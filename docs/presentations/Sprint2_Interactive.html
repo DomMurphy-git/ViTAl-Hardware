@@ -190,7 +190,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
             <p class="subtitle">Streaming Base-2 attention on the PYNQ-Z2</p>
             <div class="status">
               <div><span class="label"><i class="dot"></i> Board bring-up</span><strong class="green">Complete</strong></div>
-              <div><span class="label">Repository code on board</span><strong class="amber">Not yet tested</strong></div>
+              <div><span class="label">Repository code on board</span><strong class="amber">Programmed, undergoing testbench</strong></div>
             </div>
             <span class="pill">Interactive Sprint 2 presentation <span class="blue">·</span> use ← → to navigate</span>
           </div>
@@ -236,7 +236,7 @@ h3 { font-size:clamp(15px,1.5vw,20px) }
           <button class="card workStep" data-work="driver"><div class="num">03</div><h3>PYNQ runner</h3><p class="small">seeded vectors<br>DMA + reference compare</p></button>
           <button class="card workStep" data-work="tests"><div class="num">04</div><h3>Host verification</h3><p class="small">integer mirror<br>edge + random cases</p></button>
         </div>
-        <div class="detail" id="workDetail" aria-live="polite">RTL source exists. It has not yet been compiled or run in an HDL simulator.</div>
+        <div class="detail" id="workDetail" aria-live="polite">RTL source exists. It compiles and simulates but not testbenched.</div>
         <div class="layout"><div class="card span6"><div class="label">Milestone tracker</div><div class="statusRows"><div class="statusRow"><span>Software reference</span><b class="statusTag done">TESTS PASS</b></div><div class="statusRow"><span>PYNQ-Z2 bring-up</span><b class="statusTag done">COMPLETE</b></div><div class="statusRow"><span>Repository RTL / overlay</span><b class="statusTag pending">NOT TESTED</b></div><div class="statusRow"><span>Attention demo on board</span><b class="statusTag pending">PENDING</b></div></div></div><div class="card span6"><div class="label">What changed this sprint</div><h3 style="margin-top:12px">Hardware bring-up is complete.</h3><p class="small" style="margin-top:10px">The next proof is repository code: compile and simulate RTL, build the overlay, and run the project's DMA test on the board.</p></div></div>
       </article>
 
@@ -424,7 +424,7 @@ function showToast(text){$("toast").textContent=text;$("toast").classList.add("s
 function animateMeters(){document.querySelectorAll(".slide.active [data-meter]").forEach(el=>{el.style.width="0";requestAnimationFrame(()=>el.style.width=el.dataset.meter+"%")})}
 const flowCopy=[...document.querySelectorAll(".flowNode")];
 flowCopy.forEach(button=>button.addEventListener("click",()=>{$("flowDetail").textContent=button.dataset.detail;flowCopy.forEach(b=>b.style.borderColor="");button.style.borderColor="#39d6a2"}));
-const workCopy={rtl:"RTL source exists. It has not yet been compiled or run in an HDL simulator.",build:"A Vivado Tcl build recipe exists. Vivado is unavailable in the current validation environment, so no bitstream has been produced.",driver:"The PYNQ DMA runner is written, but has not yet executed against the physical board or a generated overlay.",tests:"The host verifier ran 132 numeric cases and produced JSON, CSV, Markdown, and SVG reports. This validates a software mirror, not the RTL itself."};
+const workCopy={rtl:"RTL source exists. It has not yet been compiled or run in an HDL simulator.",build:"A Vivado Tcl build recipe exists. bitstream produced using Vivado.",driver:"The PYNQ DMA runner is written, but has not yet executed against the physical board or a generated overlay.",tests:"The host verifier ran 132 numeric cases and produced JSON, CSV, Markdown, and SVG reports. This validates a software mirror, not the RTL itself."};
 document.querySelectorAll("[data-work]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-work]").forEach(b=>b.classList.remove("selected"));button.classList.add("selected");$("workDetail").textContent=workCopy[button.dataset.work]}));
 const nextCopy={simulate:"First repository-code proof: compile/elaborate the RTL and pass the testbench with captured simulator output.",build:"Generate the bitstream and HWH, then capture implementation timing and resource reports.",board:"Load the overlay and run the repository's PYNQ DMA runner with deterministic Q/K/V vectors.",compare:"Capture actual board output and compare it with the Python reference; repeat with the same seed."};
 document.querySelectorAll("[data-next]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-next]").forEach(b=>b.classList.remove("selected"));button.classList.add("selected");$("nextDetail").textContent=nextCopy[button.dataset.next]}));
